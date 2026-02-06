@@ -200,10 +200,10 @@ function Admin() {
                     <label>Categoría *</label>
                     <select name="categoria" value={formObra.categoria} onChange={handleChangeObra} required>
                       <option value="">Seleccionar...</option>
-                      <option value="Comercial">Comercial</option>
-                      <option value="Corporativo">Corporativo</option>
-                      <option value="Residencial">Residencial</option>
+                      <option value="Retail / Comercial">Retail / Comercial</option>
+                      <option value="Oficinas">Oficinas</option>
                       <option value="Industrial">Industrial</option>
+                      <option value="Bancos">Bancos</option>
                     </select>
                   </div>
                 </div>

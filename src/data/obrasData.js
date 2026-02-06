@@ -3,7 +3,7 @@ export const obrasData = [
   {
     id: 1,
     nombre: "ROUGE UNICENTER",
-    categoria: "Comercial",
+    categoria: "Retail / Comercial",
     ubicacion: "Martínez, Buenos Aires",
     año: 2024,
     descripcion: "Proyecto comercial de alto estándar en Unicenter Shopping. Refacción completa de local comercial con diseño moderno y funcional, cumpliendo con los más altos estándares de calidad.",
@@ -20,7 +20,7 @@ export const obrasData = [
   {
     id: 2,
     nombre: "EDIFICIO CORPORATIVO MADERO",
-    categoria: "Corporativo",
+    categoria: "Oficinas",
     ubicacion: "Puerto Madero, CABA",
     año: 2024,
     descripcion: "Construcción y refacción de oficinas corporativas de última generación. Proyecto integral que incluye diseño arquitectónico, instalaciones de alta complejidad y acabados premium.",
@@ -51,7 +51,7 @@ export const obrasData = [
   {
     id: 4,
     nombre: "CENTRO EDUCATIVO",
-    categoria: "Educativo",
+    categoria: "Oficinas",
     ubicacion: "San Isidro, Buenos Aires",
     año: 2023,
     descripcion: "Refacción y ampliación de institución educativa. Incluye aulas modernas, laboratorios y espacios recreativos.",
@@ -66,7 +66,7 @@ export const obrasData = [
   {
     id: 5,
     nombre: "CLÍNICA PRIVADA",
-    categoria: "Hospitalario",
+    categoria: "Industrial",
     ubicacion: "Vicente López, Buenos Aires",
     año: 2024,
     descripcion: "Construcción de anexo hospitalario con quirófanos de última generación y habitaciones premium.",
@@ -81,7 +81,7 @@ export const obrasData = [
   {
     id: 6,
     nombre: "EDIFICIO RESIDENCIAL",
-    categoria: "Inmobiliario",
+    categoria: "Oficinas",
     ubicacion: "Nordelta, Buenos Aires",
     año: 2023,
     descripcion: "Desarrollo inmobiliario de 24 unidades con amenities de primer nivel y diseño contemporáneo.",
@@ -96,7 +96,7 @@ export const obrasData = [
   {
     id: 7,
     nombre: "RESTAURANTE GOURMET",
-    categoria: "Gastronómico",
+    categoria: "Retail / Comercial",
     ubicacion: "Palermo, CABA",
     año: 2024,
     descripcion: "Refacción integral de restaurante de alta cocina. Diseño exclusivo con cocina profesional y ambientes sofisticados.",
@@ -111,7 +111,7 @@ export const obrasData = [
   {
     id: 8,
     nombre: "SEDE INSTITUCIONAL",
-    categoria: "Institucional",
+    categoria: "Bancos",
     ubicacion: "Centro, CABA",
     año: 2023,
     descripcion: "Restauración y modernización de edificio histórico para sede institucional. Preservación de fachada original con actualización completa interior.",

@@ -102,12 +102,10 @@ function AdminObrasDestacadas() {
                   value={obra.categoria}
                   onChange={(e) => handleInputChange(obra.id, 'categoria', e.target.value)}
                 >
+                  <option value="Retail / Comercial">Retail / Comercial</option>
+                  <option value="Oficinas">Oficinas</option>
                   <option value="Industrial">Industrial</option>
-                  <option value="Institucional">Institucional</option>
-                  <option value="Gastronómico">Gastronómico</option>
-                  <option value="Educativo">Educativo</option>
-                  <option value="Hospitalario">Hospitalario</option>
-                  <option value="Inmobiliario">Inmobiliario</option>
+                  <option value="Bancos">Bancos</option>
                 </select>
               </div>
 

@@ -250,13 +250,6 @@ function Home() {
                     <p>Compromiso con los tiempos acordados</p>
                   </div>
                 </div>
-                <div className="cert-feature">
-                  <div className="cert-icon">✓</div>
-                  <div>
-                    <h4>Certificaciones IRAM e IQNET</h4>
-                    <p>Máximos estándares de calidad internacional</p>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -274,9 +267,9 @@ function Home() {
             <h2>Empresas e instituciones que confían en nosotros</h2>
             <p>
               Somos la elección confiable de grandes marcas e instituciones, gracias a nuestra 
-              especialización en proyectos para una amplia gama de sectores corporativos. 
-              Desde el ámbito gastronómico, el sector hospitalario y el entorno industrial hasta 
-              obras de proyectos educativos, institucionales e inmobiliarios.
+              especialización en proyectos para sectores corporativos y bancarios. 
+              Desarrollamos espacios de retail/comercial, oficinas, entornos industriales 
+              y proyectos bancarios con los más altos estándares.
             </p>
           </div>
 

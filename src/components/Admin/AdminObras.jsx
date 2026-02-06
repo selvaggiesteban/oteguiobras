@@ -13,7 +13,7 @@ function AdminObras() {
   
   const [nuevaObra, setNuevaObra] = useState({
     nombre: '',
-    categoria: 'Residencial',
+    categoria: 'Retail / Comercial',
     ubicacion: '',
     año: new Date().getFullYear(),
     descripcion: '',
@@ -25,7 +25,7 @@ function AdminObras() {
     orden: 0
   });
 
-  const categorias = ['Residencial', 'Comercial', 'Industrial', 'Reformas', 'Obra Nueva'];
+  const categorias = ['Retail / Comercial', 'Oficinas', 'Industrial', 'Bancos'];
 
   useEffect(() => {
     cargarObras();
@@ -86,7 +86,7 @@ function AdminObras() {
 
       setNuevaObra({
         nombre: '',
-        categoria: 'Residencial',
+        categoria: 'Retail / Comercial',
         ubicacion: '',
         año: new Date().getFullYear(),
         descripcion: '',
@@ -110,7 +110,7 @@ function AdminObras() {
   const handleEditar = (obra) => {
     setNuevaObra({
       nombre: obra.nombre || '',
-      categoria: obra.categoria || 'Residencial',
+      categoria: obra.categoria || 'Retail / Comercial',
       ubicacion: obra.ubicacion || '',
       año: obra.año || new Date().getFullYear(),
       descripcion: obra.descripcion || '',
@@ -173,7 +173,7 @@ function AdminObras() {
   const handleCancelar = () => {
     setNuevaObra({
       nombre: '',
-      categoria: 'Residencial',
+      categoria: 'Retail / Comercial',
       ubicacion: '',
       año: new Date().getFullYear(),
       descripcion: '',
