@@ -1,0 +1,311 @@
+/* AdminClientes.css */
+
+.admin-clientes {
+  padding: 2rem;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 3rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e5e5;
+}
+
+.admin-header > div:first-child h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: #1a1a1a;
+}
+
+.admin-header > div:first-child p {
+  color: #666;
+  font-size: 1.0625rem;
+  margin: 0;
+}
+
+.agregar-cliente-form {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 3rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.agregar-cliente-form h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  color: #1a1a1a;
+  font-size: 1.25rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 1.5rem;
+  align-items: end;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-size: 0.9375rem;
+}
+
+.form-group input[type="text"] {
+  padding: 0.875rem 1rem;
+  border: 2px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-group input[type="file"] {
+  padding: 0.5rem;
+  border: 2px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #d4a574;
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
+}
+
+.form-group small {
+  display: block;
+  margin-top: 0.5rem;
+  color: #666;
+  font-size: 0.8125rem;
+}
+
+.form-group small.recomendacion {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid #2196f3;
+  font-weight: 500;
+  margin-top: 0.75rem;
+}
+
+.btn-agregar {
+  padding: 0.875rem 2rem;
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.btn-agregar:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.btn-agregar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.preview-archivo {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #666;
+  font-size: 0.9375rem;
+}
+
+.clientes-list {
+  margin-bottom: 2rem;
+}
+
+.clientes-list h3 {
+  margin-bottom: 1.5rem;
+  color: #1a1a1a;
+  font-size: 1.25rem;
+}
+
+.no-clientes {
+  text-align: center;
+  padding: 3rem;
+  color: #999;
+  font-size: 1.0625rem;
+}
+
+.clientes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.cliente-card {
+  background: white;
+  border: 2px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 100px 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.cliente-card:hover {
+  border-color: #d4a574;
+  box-shadow: 0 4px 12px rgba(212, 165, 116, 0.1);
+}
+
+.cliente-logo {
+  width: 100px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 0.5rem;
+  flex-shrink: 0;
+}
+
+.cliente-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.cliente-info {
+  flex: 1;
+}
+
+.cliente-info h4 {
+  margin: 0 0 0.5rem 0;
+  color: #1a1a1a;
+  font-size: 1.0625rem;
+}
+
+.cliente-orden {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #f0e6d8;
+  color: #d4a574;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 12px;
+}
+
+.cliente-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #666;
+}
+
+.btn-icon:hover:not(:disabled) {
+  background: #d4a574;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-icon:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-icon.btn-delete:hover:not(:disabled) {
+  background: #f44336;
+}
+
+.admin-info {
+  background: #f8f9fa;
+  border-left: 4px solid #d4a574;
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.admin-info h4 {
+  margin-bottom: 1rem;
+  color: #1a1a1a;
+  font-size: 1.125rem;
+}
+
+.admin-info ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.admin-info li {
+  margin-bottom: 0.5rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-agregar {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .clientes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cliente-card {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .cliente-logo {
+    margin: 0 auto;
+  }
+
+  .cliente-info {
+    text-align: center;
+  }
+
+  .cliente-actions {
+    justify-content: center;
+  }
+}

@@ -1,0 +1,341 @@
+.admin-faq {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.admin-faq-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.admin-faq-header h2 {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.admin-faq-loading {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.btn-demo {
+  padding: 0.8rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-demo:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-demo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mensaje {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  animation: slideIn 0.3s ease;
+}
+
+.mensaje.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.mensaje.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Formulario agregar pregunta */
+.agregar-pregunta-form {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.agregar-pregunta-form h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--primary-color);
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(255, 98, 0, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.btn-agregar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-agregar:hover:not(:disabled) {
+  background: #e85d00;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 98, 0, 0.3);
+}
+
+.btn-agregar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Lista de preguntas */
+.preguntas-lista h3 {
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.no-preguntas {
+  text-align: center;
+  padding: 3rem;
+  color: #999;
+  font-style: italic;
+}
+
+.preguntas-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.pregunta-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.pregunta-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.pregunta-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.pregunta-numero {
+  background: var(--primary-color);
+  color: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.pregunta-header h4 {
+  margin: 0;
+  color: #333;
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+.pregunta-respuesta {
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.pregunta-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.btn-icon {
+  padding: 0.6rem;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+}
+
+.btn-icon:hover:not(:disabled) {
+  background: #e0e0e0;
+  transform: translateY(-2px);
+}
+
+.btn-icon:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-icon.btn-edit {
+  color: #2196F3;
+}
+
+.btn-icon.btn-edit:hover:not(:disabled) {
+  background: #E3F2FD;
+  color: #1976D2;
+}
+
+.btn-icon.btn-delete {
+  color: #f44336;
+}
+
+.btn-icon.btn-delete:hover:not(:disabled) {
+  background: #FFEBEE;
+  color: #d32f2f;
+}
+
+.btn-icon.btn-save {
+  color: #4CAF50;
+}
+
+.btn-icon.btn-save:hover:not(:disabled) {
+  background: #E8F5E9;
+  color: #388E3C;
+}
+
+.btn-icon.btn-cancel {
+  color: #FF9800;
+}
+
+.btn-icon.btn-cancel:hover:not(:disabled) {
+  background: #FFF3E0;
+  color: #F57C00;
+}
+
+/* Modo edición */
+.pregunta-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pregunta-edit input,
+.pregunta-edit textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.pregunta-edit input:focus,
+.pregunta-edit textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(255, 98, 0, 0.1);
+}
+
+.pregunta-edit textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-faq {
+    padding: 1rem;
+  }
+
+  .admin-faq-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .btn-demo {
+    width: 100%;
+  }
+
+  .agregar-pregunta-form {
+    padding: 1.5rem;
+  }
+
+  .btn-agregar {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pregunta-actions {
+    flex-wrap: wrap;
+  }
+}

@@ -1,0 +1,44 @@
+/* Scroll to Top Button - Premium Design */
+.scroll-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 55px;
+  height: 55px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  color: var(--color-bg-white);
+  border: 2px solid rgba(252, 251, 249, 0.2);
+  border-radius: 50%;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 999;
+  box-shadow: 0 6px 25px rgba(126, 100, 75, 0.3);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeInUp 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}\n\n.scroll-to-top::before {\n  content: '';\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  width: 0;\n  height: 0;\n  border-radius: 50%;\n  background: var(--color-secondary);\n  transform: translate(-50%, -50%);\n  transition: width 0.4s ease, height 0.4s ease;\n}\n\n.scroll-to-top:hover::before {\n  width: 100%;\n  height: 100%;\n}\n\n.scroll-to-top:hover {\n  transform: translateY(-8px) scale(1.08);\n  box-shadow: 0 12px 35px rgba(126, 100, 75, 0.4);\n  border-color: rgba(252, 251, 249, 0.4);\n}\n\n.scroll-to-top:active {\n  transform: translateY(-4px) scale(1.02);\n}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .scroll-to-top {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 45px;
+    height: 45px;
+    font-size: 1.3rem;
+  }
+}

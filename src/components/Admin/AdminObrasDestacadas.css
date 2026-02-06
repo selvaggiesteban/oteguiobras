@@ -1,0 +1,230 @@
+/* AdminObrasDestacadas.css */
+
+.admin-obras-destacadas {
+  padding: 2rem;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 3rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e5e5;
+}
+
+.admin-header > div:first-child h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: #1a1a1a;
+}
+
+.admin-header > div:first-child p {
+  color: #666;
+  font-size: 1.0625rem;
+  margin: 0;
+}
+
+.btn-demo {
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  white-space: nowrap;
+}
+
+.btn-demo:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.btn-demo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.obras-destacadas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.obra-destacada-form {
+  background: white;
+  border: 2px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+}
+
+.obra-destacada-form:hover {
+  border-color: #d4a574;
+  box-shadow: 0 4px 12px rgba(212, 165, 116, 0.1);
+}
+
+.obra-destacada-form h3 {
+  margin-bottom: 1.5rem;
+  color: #d4a574;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-size: 0.9375rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.875rem 1rem;
+  border: 2px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #d4a574;
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
+}
+
+.form-group small {
+  display: block;
+  margin-top: 0.5rem;
+  color: #666;
+  font-size: 0.8125rem;
+}
+
+.form-group small.recomendacion {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid #2196f3;
+  font-weight: 500;
+  margin-top: 0.75rem;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.image-preview {
+  margin-top: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+  max-width: 300px;
+  border: 2px solid #e5e5e5;
+}
+
+.image-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.admin-actions {
+  display: flex;
+  justify-content: center;
+  margin: 3rem 0;
+  padding: 2rem 0;
+  border-top: 2px solid #e5e5e5;
+  border-bottom: 2px solid #e5e5e5;
+}
+
+.btn-guardar {
+  padding: 1.25rem 3rem;
+  background: linear-gradient(135deg, #d4a574 0%, #c8976a 100%);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(212, 165, 116, 0.3);
+}
+
+.btn-guardar:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(212, 165, 116, 0.4);
+}
+
+.btn-guardar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.admin-info {
+  background: #f8f9fa;
+  border-left: 4px solid #d4a574;
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.admin-info h4 {
+  margin-bottom: 1rem;
+  color: #1a1a1a;
+  font-size: 1.125rem;
+}
+
+.admin-info ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.admin-info li {
+  margin-bottom: 0.5rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-obras-destacadas {
+    padding: 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .btn-guardar {
+    width: 100%;
+  }
+}
