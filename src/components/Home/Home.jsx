@@ -2,12 +2,24 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { FaMapMarkerAlt, FaRulerCombined, FaCalendarAlt, FaArrowRight } from 'react-icons/fa';
 import { useCountUp } from '../../hooks/useCountUp';
-import { useInView } from '../../hooks/useAnimations';
+import { useInView, useScrollReveal, useStaggerReveal } from '../../hooks/useAnimations';
 import { getHomeConfig, loadConfig } from '../../data/homeData';
 import { getObrasDestacadas, loadObrasDestacadas } from '../../data/obrasDestacadasData';
 import { getClientes, loadClientes } from '../../data/clientesData';
 import FAQ from '../FAQ/FAQ';
 import './Home.css';
+
+// Detecta si una URL es de Vimeo y extrae el ID y hash de privacidad
+function getVimeoData(url) {
+  if (!url) return null;
+  // Soporta: vimeo.com/ID, vimeo.com/video/ID, player.vimeo.com/video/ID
+  const match = url.match(/(?:vimeo\.com\/)(?:video\/)?([0-9]+)/);
+  if (!match) return null;
+  const id = match[1];
+  // Extraer hash de privacidad (?h=xxx o &h=xxx)
+  const hashMatch = url.match(/[?&]h=([a-zA-Z0-9]+)/);
+  return { id, hash: hashMatch ? hashMatch[1] : null };
+}
 
 function Home() {
   const [whyRef, whyInView] = useInView({ threshold: 0.2 });
@@ -15,9 +27,20 @@ function Home() {
   const [certificacionRef, certificacionInView] = useInView({ threshold: 0.2 });
   const [clientesRef, clientesInView] = useInView({ threshold: 0.2 });
   
+  // Scroll reveal para secciones adicionales
+  const [enfoqueRef, enfoqueClass] = useScrollReveal('up');
+  const [metricsRef, metricsRevealed] = useStaggerReveal();
+  const [obrasHeaderRef, obrasHeaderClass] = useScrollReveal('up');
+  const [ctaRef, ctaClass] = useScrollReveal('scale');
+  const [certContentRef, certContentClass] = useScrollReveal('left');
+  const [certImageRef, certImageClass] = useScrollReveal('right', { threshold: 0.2 });
+  const [ctaFinalRef, ctaFinalClass] = useScrollReveal('up');
+  
   const [config, setConfig] = useState(getHomeConfig());
   const [obrasDestacadas, setObrasDestacadas] = useState(getObrasDestacadas());
   const [clientes, setClientes] = useState(getClientes());
+  const [cargando, setCargando] = useState(true);
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
   // Cargar datos desde Firebase al montar
   useEffect(() => {
@@ -36,6 +59,8 @@ function Home() {
         setClientes(clientesCargados);
       } catch (error) {
         console.error('Error cargando datos:', error);
+      } finally {
+        setCargando(false);
       }
     };
     cargarDatos();
@@ -74,41 +99,68 @@ function Home() {
   const [projectsRef, projects] = useCountUp(config?.metricas?.proyectos?.valor || 0, 2000);
   const [m2Ref, m2] = useCountUp(config?.metricas?.metrosConstructidos?.valor || 0, 2500);
 
+  const vimeoData = getVimeoData(config.hero.videoUrl);
+
   return (
     <div className="home">
       {/* Hero con Video Background */}
       <section className="hero-video">
-        <div className="hero-video-background">
-          <video 
-            autoPlay 
-            muted 
-            loop 
-            playsInline 
-            className="hero-video-element"
-            key={config.hero.videoUrl}
-          >
-            <source src={config.hero.videoUrl} type="video/mp4" />
-          </video>
+        {/* Poster/fallback que se muestra inmediatamente */}
+        <div 
+          className="hero-poster"
+          style={{ backgroundImage: 'url(/IMG-20251226-WA0067.jpg)' }}
+        />
+
+        <div className={`hero-video-background ${videoLoaded ? 'video-ready' : ''}`}>
+          {!cargando && config.hero.videoUrl && vimeoData ? (
+            <iframe
+              src={`https://player.vimeo.com/video/${vimeoData.id}?${vimeoData.hash ? 'h=' + vimeoData.hash + '&' : ''}background=1&autoplay=1&loop=1&byline=0&title=0&muted=1&dnt=1&quality=auto`}
+              className="hero-video-element"
+              frameBorder="0"
+              allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+              title="Hero video"
+              onLoad={() => setTimeout(() => setVideoLoaded(true), 800)}
+            />
+          ) : !cargando && config.hero.videoUrl ? (
+            <video 
+              autoPlay 
+              muted 
+              loop 
+              playsInline 
+              className="hero-video-element"
+              key={config.hero.videoUrl}
+              onCanPlay={() => setVideoLoaded(true)}
+            >
+              <source src={config.hero.videoUrl} type="video/mp4" />
+            </video>
+          ) : null}
           <div className="hero-overlay-dark"></div>
         </div>
         
         <div className="hero-container-center">
-          <div className="hero-content-center">
-            <h1 className="hero-main-title animate-fade-in-up">
+          <div className={`hero-content-center ${!cargando ? 'hero-text-ready' : ''}`}>
+            <p className="hero-eyebrow">Constructora Integral</p>
+            <h1 className="hero-main-title">
               {config.hero.titulo}<br />
               <span className="hero-highlight">{config.hero.tituloDestacado}</span>
             </h1>
-            <p className="hero-subtitle animate-fade-in-up delay-1">
+            <p className="hero-subtitle">
               {config.hero.subtitulo}
             </p>
           </div>
+        </div>
+
+        <div className={`hero-scroll-indicator ${!cargando ? 'hero-text-ready' : ''}`}>
+          <div className="scroll-line"></div>
         </div>
       </section>
 
       {/* Barra de Métricas Animadas */}
       <section className="metrics-bar">
         <div className="container">
-          <div className="metrics-grid">
+          <div className={`metrics-grid stagger-children ${metricsRevealed ? 'revealed' : ''}`} ref={metricsRef}>
             <div className="metric-item" ref={yearsRef}>
               <div className="metric-value">+{years}</div>
               <div className="metric-label">{config.metricas.anos.label}</div>
@@ -130,7 +182,7 @@ function Home() {
       {/* Enfoque Corporativo y Bancario */}
       <section className="enfoque-corporativo">
         <div className="container">
-          <div className="enfoque-content">
+          <div className={`enfoque-content ${enfoqueClass}`} ref={enfoqueRef}>
             <h2>Expertos en proyectos corporativos y bancarios</h2>
             <p>
               Con más de dos décadas de experiencia, nos especializamos en el desarrollo 
@@ -144,7 +196,7 @@ function Home() {
       {/* Obras Destacadas - Nueva sección */}
       <section className="featured-works-section" ref={obrasRef}>
         <div className="container">
-          <div className="section-header-center">
+          <div className={`section-header-center ${obrasHeaderClass}`} ref={obrasHeaderRef}>
             <h2 className="section-title">Obras destacadas</h2>
             <p className="section-subtitle">
               Construimos espacios, creamos experiencias. Nuestro compromiso: tu satisfacción.
@@ -156,6 +208,7 @@ function Home() {
               <article 
                 key={obra.id} 
                 className={`featured-work-card featured-work-${index + 1}`}
+                style={{ animationDelay: `${index * 0.15}s` }}
               >
                 <div className="featured-work-image">
                   <img src={obra.imagen} alt={obra.titulo} loading="lazy" />
@@ -199,11 +252,13 @@ function Home() {
       {/* CTA Intermedio */}
       <section className="cta-intermedio">
         <div className="container">
-          <div className="cta-intermedio-content">
+          <div className={`cta-intermedio-content ${ctaClass}`} ref={ctaRef}>
+            <p className="cta-eyebrow">¿Tenés un proyecto en mente?</p>
             <h2>Construí con nosotros</h2>
             <p>Transformamos tus ideas en realidad con la más alta calidad y profesionalismo</p>
             <Link to="/contacto" className="btn-cta-gold">
               Solicitar Presupuesto
+              <FaArrowRight style={{ marginLeft: '0.5rem', fontSize: '0.875rem' }} />
             </Link>
           </div>
         </div>
@@ -213,12 +268,11 @@ function Home() {
       <section className="certificacion-section" ref={certificacionRef}>
         <div className="container">
           <div className={`certificacion-grid ${certificacionInView ? 'animate-in' : ''}`}>
-            <div className="certificacion-content">
+            <div className={`certificacion-content ${certContentClass}`} ref={certContentRef}>
               <p className="certificacion-intro">
                 Nuestra dedicación a la excelencia y a la plena satisfacción del cliente está 
                 respaldada por una sólida base de conocimientos y un experimentado equipo de 
-                trabajo, lo que garantiza la calidad del proceso constructivo certificado bajo 
-                norma ISO 9001.
+                trabajo, lo que garantiza la calidad del proceso constructivo.
               </p>
 
               <div className="certificacion-features">
@@ -253,7 +307,7 @@ function Home() {
               </div>
             </div>
 
-            <div className="certificacion-image">
+            <div className={`certificacion-image ${certImageClass}`} ref={certImageRef}>
               <img src="/IMG-20251226-WA0073.jpg" alt="Certificación ISO 9001" />
             </div>
           </div>
@@ -302,7 +356,7 @@ function Home() {
           <div className="cta-overlay"></div>
         </div>
         <div className="container">
-          <div className="cta-content-final">
+          <div className={`cta-content-final ${ctaFinalClass}`} ref={ctaFinalRef}>
             <h2>¿Listo para comenzar?</h2>
             <p>Contactanos hoy y descubrí cómo podemos transformar tu visión en realidad</p>
             <div className="cta-actions-final">

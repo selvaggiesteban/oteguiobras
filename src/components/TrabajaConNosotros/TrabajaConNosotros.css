@@ -2,28 +2,29 @@
 
 /* Beneficios Section */
 .beneficios-section {
-  padding: 6rem 0;
-  background: var(--color-cream);
+  padding: 5rem 0;
+  background: #fafaf8;
 }
 
 .section-intro {
   text-align: center;
-  max-width: 700px;
-  margin: 0 auto 4rem;
+  max-width: 600px;
+  margin: 0 auto 3.5rem;
 }
 
 .section-intro h2 {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 3rem);
-  color: var(--color-dark);
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  color: #1a1a1a;
   margin-bottom: 1rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .section-intro p {
-  font-size: 1.125rem;
+  font-size: 1rem;
   line-height: 1.7;
-  color: var(--color-text-light);
+  color: #777;
 }
 
 .beneficios-grid {
@@ -33,47 +34,49 @@
 }
 
 .beneficio-card {
-  background: var(--color-white);
-  padding: 2.5rem;
-  border-radius: var(--radius-md);
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
   text-align: center;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .beneficio-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border-color: rgba(212, 165, 116, 0.15);
 }
 
 .beneficio-icon {
-  width: 80px;
-  height: 80px;
+  width: 64px;
+  height: 64px;
   margin: 0 auto 1.5rem;
-  background: linear-gradient(135deg, var(--color-sand) 0%, var(--color-taupe) 100%);
+  background: #1a1a1a;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-white);
+  color: #d4a574;
 }
 
 .beneficio-card h3 {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 600;
-  color: var(--color-dark);
+  color: #1a1a1a;
   margin-bottom: 0.75rem;
 }
 
 .beneficio-card p {
-  color: var(--color-text-light);
+  color: #777;
   line-height: 1.6;
+  font-size: 0.9375rem;
 }
 
 /* CV Section */
 .cv-section {
-  padding: 6rem 0;
-  background: var(--color-white);
+  padding: 5rem 0;
+  background: white;
 }
 
 .cv-layout {
@@ -86,17 +89,18 @@
 /* CV Info */
 .cv-info h2 {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 3rem);
-  color: var(--color-dark);
-  margin-bottom: 1.5rem;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  color: #1a1a1a;
+  margin-bottom: 1.25rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .cv-info p {
-  font-size: 1.125rem;
+  font-size: 1rem;
   line-height: 1.7;
-  color: var(--color-text-light);
-  margin-bottom: 2.5rem;
+  color: #777;
+  margin-bottom: 2rem;
 }
 
 .cv-features {
@@ -117,16 +121,16 @@
 }
 
 .cv-feature span {
-  font-size: 1rem;
-  color: var(--color-text-light);
+  font-size: 0.9375rem;
+  color: #666;
 }
 
 /* CV Form */
 .cv-form-container {
-  background: var(--color-cream);
-  padding: 3rem;
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  background: #fafaf8;
+  padding: 2.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .cv-form {
@@ -142,32 +146,32 @@
 }
 
 .form-group label {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-dark);
+  color: #999;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.1em;
 }
 
 .form-group input {
-  padding: 1rem 1.25rem;
-  font-size: 1rem;
-  color: var(--color-dark);
-  background: var(--color-white);
-  border: 2px solid rgba(126, 100, 75, 0.15);
-  border-radius: var(--radius-sm);
-  transition: all 0.3s ease;
+  padding: 0.875rem 1rem;
+  font-size: 0.9375rem;
+  color: #1a1a1a;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: inherit;
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: var(--color-brown);
+  border-color: #d4a574;
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.08);
 }
 
 .form-group input::placeholder {
-  color: var(--color-text-light);
-  opacity: 0.6;
+  color: #bbb;
 }
 
 /* File Input */
@@ -186,22 +190,23 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 1.25rem;
-  background: var(--color-white);
-  border: 2px dashed rgba(126, 100, 75, 0.3);
-  border-radius: var(--radius-sm);
+  padding: 0.875rem 1rem;
+  background: white;
+  border: 1px dashed rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: var(--color-text-light);
+  color: #999;
+  font-size: 0.9375rem;
 }
 
 .file-label:hover {
-  border-color: var(--color-brown);
-  background: rgba(126, 100, 75, 0.05);
+  border-color: #d4a574;
+  background: rgba(212, 165, 116, 0.03);
 }
 
 .file-label svg {
-  color: var(--color-brown);
+  color: #d4a574;
   flex-shrink: 0;
 }
 
@@ -210,24 +215,24 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  padding: 1.25rem 2.5rem;
-  font-size: 0.9375rem;
+  padding: 1rem 2.25rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-white);
-  background: linear-gradient(135deg, var(--color-brown) 0%, var(--color-dark) 100%);
+  color: white;
+  background: #1a1a1a;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(44, 35, 24, 0.2);
-  margin-top: 1rem;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-top: 0.5rem;
 }
 
 .btn-submit:hover {
+  background: #d4a574;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(44, 35, 24, 0.3);
+  box-shadow: 0 6px 20px rgba(212, 165, 116, 0.25);
 }
 
 .btn-submit svg {

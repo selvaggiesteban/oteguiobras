@@ -3,38 +3,50 @@ import { useEffect, useState, useRef } from 'react';
 /**
  * Hook para detectar cuando un elemento entra en el viewport
  * Útil para activar animaciones cuando el usuario hace scroll
+ * Usa callback ref para manejar elementos que se montan tarde
  */
 export const useInView = (options = {}) => {
   const [isInView, setIsInView] = useState(false);
   const elementRef = useRef(null);
+  const observerRef = useRef(null);
+
+  // Callback ref que se ejecuta cuando el DOM element se monta/desmonta
+  const setRef = useRef((node) => {
+    // Limpiar observer anterior
+    if (observerRef.current && elementRef.current) {
+      observerRef.current.unobserve(elementRef.current);
+    }
+
+    elementRef.current = node;
+
+    if (node && !isInView) {
+      observerRef.current = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setIsInView(true);
+            if (observerRef.current) {
+              observerRef.current.unobserve(node);
+            }
+          }
+        },
+        {
+          threshold: options.threshold || 0.1,
+          rootMargin: options.rootMargin || '0px',
+        }
+      );
+      observerRef.current.observe(node);
+    }
+  }).current;
 
   useEffect(() => {
-    const element = elementRef.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // Solo activar una vez cuando entra en vista
-        if (entry.isIntersecting && !isInView) {
-          setIsInView(true);
-        }
-      },
-      {
-        threshold: options.threshold || 0.1,
-        rootMargin: options.rootMargin || '0px',
-      }
-    );
-
-    observer.observe(element);
-
     return () => {
-      if (element) {
-        observer.unobserve(element);
+      if (observerRef.current && elementRef.current) {
+        observerRef.current.unobserve(elementRef.current);
       }
     };
-  }, [isInView, options.threshold, options.rootMargin]);
+  }, []);
 
-  return [elementRef, isInView];
+  return [setRef, isInView];
 };
 
 /**
@@ -125,4 +137,67 @@ export const usePrefetchImages = (imageUrls) => {
   }, [imageUrls]);
 
   return loaded;
+};
+
+/**
+ * Hook para scroll reveal con dirección y delay configurable
+ * Retorna ref y className para aplicar directamente
+ */
+export const useScrollReveal = (direction = 'up', options = {}) => {
+  const [ref, isInView] = useInView({ 
+    threshold: options.threshold || 0.05,
+    rootMargin: options.rootMargin || '0px 0px -30px 0px'
+  });
+  
+  const baseClass = `scroll-reveal scroll-reveal-${direction}`;
+  const className = isInView ? `${baseClass} revealed` : baseClass;
+  
+  return [ref, className, isInView];
+};
+
+/**
+ * Hook para observar contenedor con stagger en hijos
+ * Ideal para listas/grids - los hijos se animan en cascada
+ * Usa callback ref para manejar elementos que se montan tarde
+ */
+export const useStaggerReveal = (options = {}) => {
+  const [revealed, setRevealed] = useState(false);
+  const elementRef = useRef(null);
+  const observerRef = useRef(null);
+
+  const setRef = useRef((node) => {
+    if (observerRef.current && elementRef.current) {
+      observerRef.current.unobserve(elementRef.current);
+    }
+
+    elementRef.current = node;
+
+    if (node && !revealed) {
+      observerRef.current = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setRevealed(true);
+            if (observerRef.current) {
+              observerRef.current.unobserve(node);
+            }
+          }
+        },
+        {
+          threshold: options.threshold || 0.1,
+          rootMargin: options.rootMargin || '0px 0px -40px 0px'
+        }
+      );
+      observerRef.current.observe(node);
+    }
+  }).current;
+
+  useEffect(() => {
+    return () => {
+      if (observerRef.current && elementRef.current) {
+        observerRef.current.unobserve(elementRef.current);
+      }
+    };
+  }, []);
+
+  return [setRef, revealed];
 };

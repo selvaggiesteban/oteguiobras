@@ -1,4 +1,5 @@
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import ScrollToTop from './components/ScrollToTop/ScrollToTop';
@@ -11,10 +12,34 @@ import TrabajaConNosotros from './components/TrabajaConNosotros/TrabajaConNosotr
 import Admin from './components/Admin/Admin';
 import './App.css';
 
+function ScrollProgress() {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrolled = (window.scrollY / totalHeight) * 100;
+      setProgress(scrolled);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <div 
+      className="scroll-progress" 
+      style={{ width: `${progress}%` }}
+      aria-hidden="true"
+    />
+  );
+}
+
 function App() {
   return (
     <Router>
       <ScrollToTop />
+      <ScrollProgress />
       <div className="app">
         <Header />
         <main className="main-content">

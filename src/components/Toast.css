@@ -11,14 +11,14 @@
 
 .toast {
   background: white;
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 300px;
-  font-size: 0.95rem;
-  animation: slideIn 0.3s ease-out;
+  padding: 0.875rem 1.25rem;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  min-width: 280px;
+  font-size: 0.875rem;
+  animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: all;
-  border-left: 4px solid;
+  border-left: 3px solid;
 }
 
 .toast-success {

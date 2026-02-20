@@ -1,8 +1,13 @@
 import { Link } from 'react-router-dom';
+import { useScrollReveal, useStaggerReveal } from '../../hooks/useAnimations';
 import { equipoData } from '../../data/equipoData';
 import './Equipo.css';
 
 function Equipo() {
+  const [heroRef, heroClass] = useScrollReveal('up');
+  const [introRef, introClass] = useScrollReveal('up');
+  const [gridRef, gridRevealed] = useStaggerReveal({ threshold: 0.08 });
+
   return (
     <div className="equipo-page">
       {/* Hero */}
@@ -11,7 +16,7 @@ function Equipo() {
           <div className="page-hero-overlay"></div>
         </div>
         <div className="container">
-          <div className="page-hero-content">
+          <div className={`page-hero-content ${heroClass}`} ref={heroRef}>
             <span className="page-badge">Equipo</span>
             <h1>Profesionales que construyen excelencia</h1>
             <p>
@@ -25,7 +30,7 @@ function Equipo() {
       {/* Equipo Grid */}
       <section className="equipo-section">
         <div className="container">
-          <div className="section-intro">
+          <div className={`section-intro ${introClass}`} ref={introRef}>
             <h2>Conoce a nuestros líderes</h2>
             <p>
               Arquitectos, ingenieros y maestros mayores de obra certificados,
@@ -33,7 +38,7 @@ function Equipo() {
             </p>
           </div>
 
-          <div className="equipo-grid">
+          <div className={`equipo-grid stagger-scale ${gridRevealed ? 'revealed' : ''}`} ref={gridRef}>
             {equipoData.map((miembro, index) => (
               <article key={miembro.id} className="miembro-card">
                 <div className="miembro-image-wrapper">

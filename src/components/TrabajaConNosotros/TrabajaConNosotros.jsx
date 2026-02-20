@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useScrollReveal, useStaggerReveal } from '../../hooks/useAnimations';
 import './TrabajaConNosotros.css';
 
 function TrabajaConNosotros() {
@@ -9,6 +10,13 @@ function TrabajaConNosotros() {
     linkedin: '',
     cv: null
   });
+
+  // Scroll reveal hooks
+  const [heroRef, heroClass] = useScrollReveal('up');
+  const [introRef, introClass] = useScrollReveal('up');
+  const [beneficiosRef, beneficiosRevealed] = useStaggerReveal({ threshold: 0.08 });
+  const [cvInfoRef, cvInfoClass] = useScrollReveal('left', { threshold: 0.1 });
+  const [cvFormRef, cvFormClass] = useScrollReveal('right', { threshold: 0.1 });
 
   const handleChange = (e) => {
     if (e.target.name === 'cv') {
@@ -32,7 +40,7 @@ function TrabajaConNosotros() {
           <div className="page-hero-overlay"></div>
         </div>
         <div className="container">
-          <div className="page-hero-content">
+          <div className={`page-hero-content ${heroClass}`} ref={heroRef}>
             <span className="page-badge">Carreras</span>
             <h1>Construye tu futuro con nosotros</h1>
             <p>
@@ -46,7 +54,7 @@ function TrabajaConNosotros() {
       {/* Beneficios */}
       <section className="beneficios-section">
         <div className="container">
-          <div className="section-intro">
+          <div className={`section-intro ${introClass}`} ref={introRef}>
             <h2>¿Por qué trabajar en Otegui?</h2>
             <p>
               Ofrecemos un ambiente profesional donde el talento y la dedicación
@@ -54,7 +62,7 @@ function TrabajaConNosotros() {
             </p>
           </div>
 
-          <div className="beneficios-grid">
+          <div className={`beneficios-grid stagger-scale ${beneficiosRevealed ? 'revealed' : ''}`} ref={beneficiosRef}>
             <div className="beneficio-card">
               <div className="beneficio-icon">
                 <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
@@ -108,7 +116,7 @@ function TrabajaConNosotros() {
       <section className="cv-section">
         <div className="container">
           <div className="cv-layout">
-            <div className="cv-info">
+            <div className={`cv-info ${cvInfoClass}`} ref={cvInfoRef}>
               <h2>Postulate ahora</h2>
               <p>
                 Enviá tu CV y formá parte de un equipo que está transformando
@@ -136,7 +144,7 @@ function TrabajaConNosotros() {
               </div>
             </div>
 
-            <div className="cv-form-container">
+            <div className={`cv-form-container ${cvFormClass}`} ref={cvFormRef}>
               <form className="cv-form" onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label htmlFor="nombre">Nombre Completo *</label>

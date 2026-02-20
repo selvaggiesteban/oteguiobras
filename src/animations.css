@@ -1,4 +1,6 @@
-/* animations.css - Vacío por ahora */
+/* animations.css - Sistema de animaciones scroll profesional */
+
+/* ===== KEYFRAMES BASE ===== */
 
 @keyframes fadeInDown {
   from {
@@ -374,4 +376,192 @@ html {
 .page-exit-active {
   opacity: 0;
   transition: opacity 0.3s ease;
+}
+
+/* ===== SCROLL REVEAL SYSTEM ===== */
+
+/* Base state: hidden */
+.scroll-reveal {
+  opacity: 0;
+  will-change: transform, opacity;
+  transition: 
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Direction variants - initial transform */
+.scroll-reveal-up {
+  transform: translateY(50px);
+}
+
+.scroll-reveal-down {
+  transform: translateY(-50px);
+}
+
+.scroll-reveal-left {
+  transform: translateX(-60px);
+}
+
+.scroll-reveal-right {
+  transform: translateX(60px);
+}
+
+.scroll-reveal-scale {
+  transform: scale(0.92);
+}
+
+.scroll-reveal-fade {
+  transform: none;
+}
+
+/* Revealed state */
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0) translateX(0) scale(1);
+}
+
+/* ===== STAGGER CHILDREN SYSTEM ===== */
+/* Container triggers stagger on children */
+.stagger-children.revealed > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.stagger-children > * {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: 
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Stagger delays for children */
+.stagger-children.revealed > *:nth-child(1) { transition-delay: 0s; }
+.stagger-children.revealed > *:nth-child(2) { transition-delay: 0.1s; }
+.stagger-children.revealed > *:nth-child(3) { transition-delay: 0.2s; }
+.stagger-children.revealed > *:nth-child(4) { transition-delay: 0.3s; }
+.stagger-children.revealed > *:nth-child(5) { transition-delay: 0.4s; }
+.stagger-children.revealed > *:nth-child(6) { transition-delay: 0.5s; }
+.stagger-children.revealed > *:nth-child(7) { transition-delay: 0.6s; }
+.stagger-children.revealed > *:nth-child(8) { transition-delay: 0.7s; }
+.stagger-children.revealed > *:nth-child(9) { transition-delay: 0.8s; }
+.stagger-children.revealed > *:nth-child(10) { transition-delay: 0.9s; }
+.stagger-children.revealed > *:nth-child(11) { transition-delay: 1.0s; }
+.stagger-children.revealed > *:nth-child(12) { transition-delay: 1.1s; }
+
+/* Stagger with scale - for cards */
+.stagger-scale > * {
+  opacity: 0;
+  transform: translateY(30px) scale(0.95);
+  transition: 
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stagger-scale.revealed > * {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.stagger-scale.revealed > *:nth-child(1) { transition-delay: 0.05s; }
+.stagger-scale.revealed > *:nth-child(2) { transition-delay: 0.12s; }
+.stagger-scale.revealed > *:nth-child(3) { transition-delay: 0.19s; }
+.stagger-scale.revealed > *:nth-child(4) { transition-delay: 0.26s; }
+.stagger-scale.revealed > *:nth-child(5) { transition-delay: 0.33s; }
+.stagger-scale.revealed > *:nth-child(6) { transition-delay: 0.40s; }
+.stagger-scale.revealed > *:nth-child(7) { transition-delay: 0.47s; }
+.stagger-scale.revealed > *:nth-child(8) { transition-delay: 0.54s; }
+
+/* ===== SCROLL REVEAL DELAYS ===== */
+.reveal-delay-1 { transition-delay: 0.1s !important; }
+.reveal-delay-2 { transition-delay: 0.2s !important; }
+.reveal-delay-3 { transition-delay: 0.3s !important; }
+.reveal-delay-4 { transition-delay: 0.4s !important; }
+.reveal-delay-5 { transition-delay: 0.5s !important; }
+
+/* ===== LINE REVEAL (for decorative lines/dividers) ===== */
+.line-reveal {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.line-reveal.revealed {
+  transform: scaleX(1);
+}
+
+/* ===== COUNTER / NUMBER REVEAL ===== */
+.number-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: 
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.number-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== TEXT CLIP REVEAL ===== */
+@keyframes textClipReveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.text-clip-reveal {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.text-clip-reveal.revealed {
+  clip-path: inset(0 0 0 0);
+}
+
+/* ===== IMAGE REVEAL - subtle zoom + fade ===== */
+.image-reveal {
+  opacity: 0;
+  overflow: hidden;
+}
+
+.image-reveal img {
+  transform: scale(1.08);
+  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.image-reveal.revealed {
+  opacity: 1;
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.image-reveal.revealed img {
+  transform: scale(1);
+}
+
+/* ===== SECTION DIVIDER LINE GROW ===== */
+@keyframes lineGrow {
+  from { width: 0; }
+  to { width: 60px; }
+}
+
+/* ===== PREFERS REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal,
+  .stagger-children > *,
+  .stagger-scale > *,
+  .line-reveal,
+  .number-reveal,
+  .text-clip-reveal,
+  .image-reveal,
+  .image-reveal img {
+    transition-duration: 0.01ms !important;
+    transform: none !important;
+    opacity: 1 !important;
+    clip-path: none !important;
+  }
 }

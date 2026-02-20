@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useScrollReveal, useStaggerReveal } from '../../hooks/useAnimations';
 import './Contacto.css';
 
 function Contacto() {
@@ -9,6 +10,11 @@ function Contacto() {
     empresa: '',
     mensaje: ''
   });
+
+  // Scroll reveal hooks
+  const [heroRef, heroClass] = useScrollReveal('up');
+  const [sidebarRef, sidebarRevealed] = useStaggerReveal({ threshold: 0.1 });
+  const [formRef, formClass] = useScrollReveal('right', { threshold: 0.1 });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -28,7 +34,7 @@ function Contacto() {
           <div className="page-hero-overlay"></div>
         </div>
         <div className="container">
-          <div className="page-hero-content">
+          <div className={`page-hero-content ${heroClass}`} ref={heroRef}>
             <span className="page-badge">Contacto</span>
             <h1>Hablemos de tu proyecto</h1>
             <p>
@@ -45,7 +51,7 @@ function Contacto() {
           <div className="contacto-layout">
             {/* Info Cards */}
             <div className="contacto-sidebar">
-              <div className="info-cards">
+              <div className={`info-cards stagger-children ${sidebarRevealed ? 'revealed' : ''}`} ref={sidebarRef}>
                 <div className="info-card">
                   <div className="info-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -103,7 +109,7 @@ function Contacto() {
             </div>
 
             {/* Formulario */}
-            <div className="contacto-form-container">
+            <div className={`contacto-form-container ${formClass}`} ref={formRef}>
               <div className="form-header">
                 <h2>Envianos tu consulta</h2>
                 <p>Responderemos en menos de 24 horas hábiles</p>

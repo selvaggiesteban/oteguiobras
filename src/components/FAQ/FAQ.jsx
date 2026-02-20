@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useScrollReveal, useStaggerReveal } from '../../hooks/useAnimations';
 import { getFAQ, loadFAQ } from '../../data/faqData';
 import './FAQ.css';
 
 function FAQ() {
   const [activeIndex, setActiveIndex] = useState(null);
   const [faqs, setFaqs] = useState([]);
+  
+  // Scroll reveal hooks
+  const [headerRef, headerClass] = useScrollReveal('up');
+  const [listRef, listRevealed] = useStaggerReveal({ threshold: 0.08 });
 
   useEffect(() => {
     cargarPreguntas();
@@ -36,13 +41,13 @@ function FAQ() {
   return (
     <section className="faq-section">
       <div className="container-narrow">
-        <div className="faq-header">
+        <div className={`faq-header ${headerClass}`} ref={headerRef}>
           <span className="section-badge">Preguntas Frecuentes</span>
           <h2>¿Tenés dudas?</h2>
           <p>Respondemos las consultas más comunes sobre nuestros servicios y procesos de trabajo</p>
         </div>
 
-        <div className="faq-list">
+        <div className={`faq-list stagger-children ${listRevealed ? 'revealed' : ''}`} ref={listRef}>
           {faqs.map((faq, index) => (
             <div 
               key={index} 

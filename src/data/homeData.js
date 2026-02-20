@@ -7,10 +7,10 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 const defaultConfig = {
   // Hero
   hero: {
-    videoUrl: "https://ocreconstrucciones.com/wp-content/uploads/2025/06/Ocre-Construcciones.mp4",
-    titulo: "Construimos",
-    tituloDestacado: "Espacios",
-    subtitulo: "Excelencia en construcción"
+    videoUrl: "",
+    titulo: "",
+    tituloDestacado: "",
+    subtitulo: ""
   },
 
   // Métricas

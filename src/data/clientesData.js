@@ -8,39 +8,45 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 const defaultClientes = [
   {
     id: 1,
-    nombre: "UOM",
-    logoUrl: "https://via.placeholder.com/200x100/d4a574/ffffff?text=UOM",
+    nombre: "BBVA",
+    logoUrl: "/logos/bbva.svg",
     orden: 1
   },
   {
     id: 2,
-    nombre: "Mostaza",
-    logoUrl: "https://via.placeholder.com/200x100/d4a574/ffffff?text=Mostaza",
+    nombre: "Banco Galicia",
+    logoUrl: "/logos/banco-galicia.svg",
     orden: 2
   },
   {
     id: 3,
-    nombre: "Hospital",
-    logoUrl: "https://via.placeholder.com/200x100/d4a574/ffffff?text=Hospital",
+    nombre: "Isadora",
+    logoUrl: "/logos/isadora.svg",
     orden: 3
   },
   {
     id: 4,
-    nombre: "Constructora",
-    logoUrl: "https://via.placeholder.com/200x100/d4a574/ffffff?text=Constructora",
+    nombre: "Itaú",
+    logoUrl: "/logos/itau.svg",
     orden: 4
   },
   {
     id: 5,
-    nombre: "Inmobiliaria",
-    logoUrl: "https://via.placeholder.com/200x100/d4a574/ffffff?text=Inmobiliaria",
+    nombre: "Mercedes-Benz",
+    logoUrl: "/logos/mercedes-benz.svg",
     orden: 5
   },
   {
     id: 6,
-    nombre: "Empresa",
-    logoUrl: "https://via.placeholder.com/200x100/d4a574/ffffff?text=Empresa",
+    nombre: "Pfizer",
+    logoUrl: "/logos/pfizer.svg",
     orden: 6
+  },
+  {
+    id: 7,
+    nombre: "Samsung",
+    logoUrl: "/logos/samsung.svg",
+    orden: 7
   }
 ];
 
@@ -54,7 +60,20 @@ export const loadClientes = async () => {
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
-      cachedClientes = docSnap.data().clientes.sort((a, b) => a.orden - b.orden);
+      const clientesFirebase = docSnap.data().clientes;
+      // Si los datos en Firebase son placeholders viejos, actualizar con los nuevos defaults
+      // Detectar datos viejos: placeholders o nombres de clientes dummy
+      const nombresViejos = ['UOM', 'Mostaza', 'Hospital', 'Constructora', 'Inmobiliaria', 'Empresa'];
+      const tienenDatosViejos = clientesFirebase.some(c => 
+        (c.logoUrl && c.logoUrl.includes('via.placeholder.com')) ||
+        nombresViejos.includes(c.nombre)
+      );
+      if (tienenDatosViejos) {
+        await setDoc(docRef, { clientes: defaultClientes });
+        cachedClientes = defaultClientes;
+        return defaultClientes;
+      }
+      cachedClientes = clientesFirebase.sort((a, b) => a.orden - b.orden);
       return cachedClientes;
     } else {
       // Si no existe, crear documento con clientes default

@@ -125,7 +125,7 @@ function AdminHome() {
             onChange={(e) => handleInputChange('hero', 'videoUrl', e.target.value)}
             placeholder="https://..."
           />
-          <small>URL del video MP4 para el fondo del hero</small>
+          <small>URL del video para el fondo del hero (MP4 directo o link de Vimeo)</small>
         </div>
 
         <div className="form-group">

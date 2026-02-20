@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaSearch, FaMapMarkerAlt, FaRulerCombined, FaCalendarAlt } from 'react-icons/fa';
+import { useScrollReveal, useStaggerReveal } from '../../hooks/useAnimations';
 import { obrasData } from '../../data/obrasData';
 import './Obras.css';
 
@@ -8,6 +9,12 @@ function Obras() {
   const [categoriaActiva, setCategoriaActiva] = useState('Todas');
   const [busqueda, setBusqueda] = useState('');
   const [ordenar, setOrdenar] = useState('reciente');
+  
+  // Scroll reveal hooks
+  const [heroContentRef, heroContentClass] = useScrollReveal('up');
+  const [statsRef, statsRevealed] = useStaggerReveal();
+  const [controlsRef, controlsClass] = useScrollReveal('up', { threshold: 0.1 });
+  const [gridRef, gridRevealed] = useStaggerReveal({ threshold: 0.05 });
   
   const categorias = ['Todas', ...new Set(obrasData.map(obra => obra.categoria))];
   
@@ -41,14 +48,14 @@ function Obras() {
           <div className="page-hero-overlay"></div>
         </div>
         <div className="container">
-          <div className="page-hero-content">
+          <div className={`page-hero-content ${heroContentClass}`} ref={heroContentRef}>
             <span className="page-badge">Portfolio</span>
             <h1>Proyectos que transforman espacios</h1>
             <p>
               Más de 200 obras corporativas y comerciales entregadas con excelencia.
               Cada proyecto es un testimonio de nuestra dedicación a la calidad.
             </p>
-            <div className="hero-stats-mini">
+            <div className={`hero-stats-mini stagger-children ${statsRevealed ? 'revealed' : ''}`} ref={statsRef}>
               <div className="stat-mini">
                 <strong>200+</strong>
                 <span>Proyectos</span>
@@ -70,7 +77,7 @@ function Obras() {
       <section className="obras-section">
         <div className="container">
           {/* Barra de búsqueda y ordenamiento */}
-          <div className="obras-controls">
+          <div className={`obras-controls ${controlsClass}`} ref={controlsRef}>
             <div className="search-box">
               <FaSearch className="search-icon" />
               <input
@@ -142,7 +149,7 @@ function Obras() {
 
           {/* Grid de obras */}
           {obrasOrdenadas.length > 0 ? (
-            <div className="obras-grid">
+            <div className={`obras-grid stagger-scale ${gridRevealed ? 'revealed' : ''}`} ref={gridRef}>
               {obrasOrdenadas.map(obra => (
                 <article key={obra.id} className="obra-card">
                   <Link to={`/obras/${obra.id}`} className="obra-link">

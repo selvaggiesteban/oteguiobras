@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useScrollReveal } from '../../hooks/useAnimations';
 import { obrasData } from '../../data/obrasData';
 import './ObraDetalle.css';
 
@@ -8,6 +9,12 @@ function ObraDetalle() {
   const navigate = useNavigate();
   const obra = obrasData.find(o => o.id === parseInt(id));
   const [imagenActual, setImagenActual] = useState(0);
+
+  // Scroll reveal hooks
+  const [heroRef, heroClass] = useScrollReveal('up');
+  const [galeriaRef, galeriaClass] = useScrollReveal('up', { threshold: 0.05 });
+  const [infoRef, infoClass] = useScrollReveal('up', { threshold: 0.1 });
+  const [ctaRef, ctaClass] = useScrollReveal('scale');
 
   if (!obra) {
     return (
@@ -56,7 +63,7 @@ function ObraDetalle() {
             Volver a Obras
           </button>
           
-          <div className="obra-hero-content">
+          <div className={`obra-hero-content ${heroClass}`} ref={heroRef}>
             <span className="obra-tag-detalle">{obra.categoria}</span>
             <h1>{obra.nombre}</h1>
             <div className="obra-meta">
@@ -92,7 +99,7 @@ function ObraDetalle() {
       {/* Galería */}
       <section className="obra-galeria">
         <div className="container">
-          <div className="galeria-principal">
+          <div className={`galeria-principal ${galeriaClass}`} ref={galeriaRef}>
             <img 
               src={imagenes[imagenActual]} 
               alt={`${obra.nombre} - imagen ${imagenActual + 1}`} 
@@ -144,7 +151,7 @@ function ObraDetalle() {
       {/* Información del proyecto */}
       <section className="obra-info">
         <div className="container">
-          <div className="info-grid">
+          <div className={`info-grid ${infoClass}`} ref={infoRef}>
             <div className="info-principal">
               <h2>Sobre el proyecto</h2>
               <p className="obra-descripcion">{obra.descripcion}</p>
@@ -202,7 +209,7 @@ function ObraDetalle() {
       {/* CTA */}
       <section className="obra-cta">
         <div className="container">
-          <div className="cta-box">
+          <div className={`cta-box ${ctaClass}`} ref={ctaRef}>
             <h3>¿Tenés un proyecto en mente?</h3>
             <p>Hablemos de cómo podemos hacerlo realidad</p>
             <Link to="/contacto" className="btn-cta-obra">Solicitar Presupuesto</Link>
