@@ -42,7 +42,13 @@ function Equipo() {
             {equipoData.map((miembro, index) => (
               <article key={miembro.id} className="miembro-card">
                 <div className="miembro-image-wrapper">
-                  <img src={miembro.foto} alt={miembro.nombre} className="miembro-image" />
+                  <img
+                    src={miembro.foto}
+                    alt={miembro.nombre}
+                    className="miembro-image"
+                    loading="lazy"
+                    onError={(e) => { e.currentTarget.style.opacity = '0'; }}
+                  />
                   <div className="miembro-overlay"></div>
                 </div>
                 <div className="miembro-content">

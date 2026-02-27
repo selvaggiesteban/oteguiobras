@@ -1,17 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getHomeConfig, actualizarHomeConfig, loadConfig, cargarDatosDemo } from '../../data/homeData';
+import { storage } from '../../firebase/config';
 import { useToast } from '../Toast';
 import './AdminHome.css';
 
 function AdminHome() {
   const toast = useToast();
   const [config, setConfig] = useState(getHomeConfig());
-  const [guardado, setGuardado] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [cargandoDemo, setCargandoDemo] = useState(false);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
+  const fileInputRef = useRef(null);
 
-  // Cargar config desde Firebase al montar
   useEffect(() => {
     const cargarConfig = async () => {
       setCargando(true);
@@ -45,33 +47,46 @@ function AdminHome() {
     }));
   };
 
+  const handleHeroImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setSubiendoImagen(true);
+    try {
+      const storageRef = ref(storage, 'hero/background');
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      setConfig(prev => ({ ...prev, hero: { ...prev.hero, heroImageUrl: url } }));
+      toast.success('Imagen subida. Guardá los cambios para aplicarla.');
+    } catch (err) {
+      console.error('Error subiendo imagen:', err);
+      toast.error('Error al subir la imagen. Intentá de nuevo.');
+    } finally {
+      setSubiendoImagen(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const handleGuardar = async () => {
     setGuardando(true);
     try {
-      // Guardar en Firebase
       await actualizarHomeConfig(config);
-      
-      // Mostrar mensaje de éxito
-      setGuardado(true);
-      setTimeout(() => setGuardado(false), 3000);
-      
-      alert('✓ Cambios guardados exitosamente en Firebase!\n\nLos cambios se verán reflejados en el Home.');
+      toast.success('Cambios guardados en Firebase.');
     } catch (error) {
-      alert('❌ Error al guardar los cambios:\n' + error.message);
+      toast.error('Error al guardar: ' + error.message);
     } finally {
       setGuardando(false);
     }
   };
 
   const handleCargarDemo = async () => {
-    if (window.confirm('⚠️ ¿Estás seguro de cargar los datos demo?\n\nEsto sobrescribirá la configuración actual con los valores de ejemplo.')) {
+    if (window.confirm('¿Cargar datos demo? Esto sobrescribirá la configuración actual.')) {
       setCargandoDemo(true);
       try {
         const datosDemo = await cargarDatosDemo();
         setConfig(datosDemo);
-        alert('✓ Datos demo cargados exitosamente en Firebase!\n\nLos valores de ejemplo están ahora activos.');
+        toast.success('Datos demo cargados exitosamente.');
       } catch (error) {
-        alert('❌ Error al cargar datos demo:\n' + error.message);
+        toast.error('Error al cargar datos demo: ' + error.message);
       } finally {
         setCargandoDemo(false);
       }
@@ -82,7 +97,7 @@ function AdminHome() {
     return (
       <div className="admin-home">
         <div style={{ textAlign: 'center', padding: '3rem' }}>
-          <p>⏳ Cargando configuración desde Firebase...</p>
+          <p>Cargando configuración desde Firebase...</p>
         </div>
       </div>
     );
@@ -96,19 +111,19 @@ function AdminHome() {
           <p className="admin-subtitle">Gestiona el contenido del hero y las métricas</p>
         </div>
         <div className="header-actions">
-          <button 
+          <button
             className="btn-demo"
             onClick={handleCargarDemo}
             disabled={cargandoDemo}
           >
-            {cargandoDemo ? '⏳ Cargando...' : '📦 Cargar Datos Demo'}
+            {cargandoDemo ? 'Cargando...' : 'Cargar Datos Demo'}
           </button>
-          <button 
-            className={`btn-guardar ${guardado ? 'guardado' : ''}`}
+          <button
+            className="btn-guardar"
             onClick={handleGuardar}
             disabled={guardando}
           >
-            {guardando ? '⏳ Guardando...' : guardado ? '✓ Guardado' : '💾 Guardar Cambios'}
+            {guardando ? 'Guardando...' : 'Guardar Cambios'}
           </button>
         </div>
       </div>
@@ -116,21 +131,61 @@ function AdminHome() {
       {/* Hero Section */}
       <section className="admin-section">
         <h3>Hero Principal</h3>
-        
+
+        {/* Imagen de Fondo */}
         <div className="form-group">
-          <label>URL del Video</label>
-          <input 
-            type="url"
-            value={config.hero.videoUrl}
-            onChange={(e) => handleInputChange('hero', 'videoUrl', e.target.value)}
-            placeholder="https://..."
-          />
-          <small>URL del video para el fondo del hero (MP4 directo o link de Vimeo)</small>
+          <label>Imagen de Fondo del Hero</label>
+          <div className="hero-image-upload">
+            {config.hero?.heroImageUrl ? (
+              <div className="hero-image-preview">
+                <img src={config.hero.heroImageUrl} alt="Vista previa del hero" />
+                <button
+                  type="button"
+                  className="btn-change-image"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={subiendoImagen}
+                >
+                  {subiendoImagen ? 'Subiendo...' : 'Cambiar imagen'}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="btn-upload-hero"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={subiendoImagen}
+              >
+                {subiendoImagen ? (
+                  <>
+                    <span className="upload-spinner"></span>
+                    Subiendo imagen...
+                  </>
+                ) : (
+                  <>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="16 16 12 12 8 16"/>
+                      <line x1="12" y1="12" x2="12" y2="21"/>
+                      <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                    </svg>
+                    Subir imagen de fondo
+                  </>
+                )}
+              </button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleHeroImageUpload}
+              style={{ display: 'none' }}
+            />
+          </div>
+          <small>JPG o PNG. Recomendado: 1920×1080px o mayor. Se reemplaza la imagen anterior.</small>
         </div>
 
         <div className="form-group">
           <label>Título Principal</label>
-          <input 
+          <input
             type="text"
             value={config.hero.titulo}
             onChange={(e) => handleInputChange('hero', 'titulo', e.target.value)}
@@ -140,7 +195,7 @@ function AdminHome() {
 
         <div className="form-group">
           <label>Título Destacado (dorado)</label>
-          <input 
+          <input
             type="text"
             value={config.hero.tituloDestacado}
             onChange={(e) => handleInputChange('hero', 'tituloDestacado', e.target.value)}
@@ -150,7 +205,7 @@ function AdminHome() {
 
         <div className="form-group">
           <label>Subtítulo</label>
-          <input 
+          <input
             type="text"
             value={config.hero.subtitulo}
             onChange={(e) => handleInputChange('hero', 'subtitulo', e.target.value)}
@@ -178,7 +233,7 @@ function AdminHome() {
           <div className="form-row">
             <div className="form-group">
               <label>Valor</label>
-              <input 
+              <input
                 type="number"
                 value={config.metricas.anos.valor}
                 onChange={(e) => handleMetricaChange('anos', 'valor', e.target.value)}
@@ -186,7 +241,7 @@ function AdminHome() {
             </div>
             <div className="form-group">
               <label>Etiqueta</label>
-              <input 
+              <input
                 type="text"
                 value={config.metricas.anos.label}
                 onChange={(e) => handleMetricaChange('anos', 'label', e.target.value)}
@@ -201,7 +256,7 @@ function AdminHome() {
           <div className="form-row">
             <div className="form-group">
               <label>Valor</label>
-              <input 
+              <input
                 type="number"
                 value={config.metricas.metrosConstructidos.valor}
                 onChange={(e) => handleMetricaChange('metrosConstructidos', 'valor', e.target.value)}
@@ -209,7 +264,7 @@ function AdminHome() {
             </div>
             <div className="form-group">
               <label>Etiqueta</label>
-              <input 
+              <input
                 type="text"
                 value={config.metricas.metrosConstructidos.label}
                 onChange={(e) => handleMetricaChange('metrosConstructidos', 'label', e.target.value)}
@@ -224,7 +279,7 @@ function AdminHome() {
           <div className="form-row">
             <div className="form-group">
               <label>Valor</label>
-              <input 
+              <input
                 type="number"
                 value={config.metricas.proyectos.valor}
                 onChange={(e) => handleMetricaChange('proyectos', 'valor', e.target.value)}
@@ -232,7 +287,7 @@ function AdminHome() {
             </div>
             <div className="form-group">
               <label>Etiqueta</label>
-              <input 
+              <input
                 type="text"
                 value={config.metricas.proyectos.label}
                 onChange={(e) => handleMetricaChange('proyectos', 'label', e.target.value)}
@@ -259,12 +314,12 @@ function AdminHome() {
       </section>
 
       <div className="admin-footer-actions">
-        <button 
-          className={`btn-guardar-grande ${guardado ? 'guardado' : ''}`}
+        <button
+          className="btn-guardar-grande"
           onClick={handleGuardar}
           disabled={guardando}
         >
-          {guardando ? '⏳ Guardando en Firebase...' : guardado ? '✓ Guardado Exitosamente' : '💾 Guardar Todos los Cambios'}
+          {guardando ? 'Guardando en Firebase...' : 'Guardar Todos los Cambios'}
         </button>
         <p className="info-guardar">
           Los cambios se guardan en Firebase y se aplican instantáneamente

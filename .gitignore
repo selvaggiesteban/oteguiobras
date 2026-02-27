@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# Env
+.env
+
+# Scripts - archivos sensibles y generados
+scripts/serviceAccountKey.json
+scripts/obras-scraped.json
+scripts/obras-enriched.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

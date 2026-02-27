@@ -9,20 +9,8 @@ import { getClientes, loadClientes } from '../../data/clientesData';
 import FAQ from '../FAQ/FAQ';
 import './Home.css';
 
-// Detecta si una URL es de Vimeo y extrae el ID y hash de privacidad
-function getVimeoData(url) {
-  if (!url) return null;
-  // Soporta: vimeo.com/ID, vimeo.com/video/ID, player.vimeo.com/video/ID
-  const match = url.match(/(?:vimeo\.com\/)(?:video\/)?([0-9]+)/);
-  if (!match) return null;
-  const id = match[1];
-  // Extraer hash de privacidad (?h=xxx o &h=xxx)
-  const hashMatch = url.match(/[?&]h=([a-zA-Z0-9]+)/);
-  return { id, hash: hashMatch ? hashMatch[1] : null };
-}
 
 function Home() {
-  const [whyRef, whyInView] = useInView({ threshold: 0.2 });
   const [obrasRef, obrasInView] = useInView({ threshold: 0.2 });
   const [certificacionRef, certificacionInView] = useInView({ threshold: 0.2 });
   const [clientesRef, clientesInView] = useInView({ threshold: 0.2 });
@@ -40,7 +28,6 @@ function Home() {
   const [obrasDestacadas, setObrasDestacadas] = useState(getObrasDestacadas());
   const [clientes, setClientes] = useState(getClientes());
   const [cargando, setCargando] = useState(true);
-  const [videoLoaded, setVideoLoaded] = useState(false);
 
   // Cargar datos desde Firebase al montar
   useEffect(() => {
@@ -99,45 +86,15 @@ function Home() {
   const [projectsRef, projects] = useCountUp(config?.metricas?.proyectos?.valor || 0, 2000);
   const [m2Ref, m2] = useCountUp(config?.metricas?.metrosConstructidos?.valor || 0, 2500);
 
-  const vimeoData = getVimeoData(config.hero.videoUrl);
-
   return (
     <div className="home">
-      {/* Hero con Video Background */}
+      {/* Hero con Foto */}
       <section className="hero-video">
-        {/* Poster/fallback que se muestra inmediatamente */}
-        <div 
+        <div
           className="hero-poster"
-          style={{ backgroundImage: 'url(/IMG-20251226-WA0067.jpg)' }}
+          style={{ backgroundImage: `url(${config.hero?.heroImageUrl || '/IMG-20251226-WA0067.jpg'})` }}
         />
-
-        <div className={`hero-video-background ${videoLoaded ? 'video-ready' : ''}`}>
-          {!cargando && config.hero.videoUrl && vimeoData ? (
-            <iframe
-              src={`https://player.vimeo.com/video/${vimeoData.id}?${vimeoData.hash ? 'h=' + vimeoData.hash + '&' : ''}background=1&autoplay=1&loop=1&byline=0&title=0&muted=1&dnt=1&quality=auto`}
-              className="hero-video-element"
-              frameBorder="0"
-              allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-              title="Hero video"
-              onLoad={() => setTimeout(() => setVideoLoaded(true), 800)}
-            />
-          ) : !cargando && config.hero.videoUrl ? (
-            <video 
-              autoPlay 
-              muted 
-              loop 
-              playsInline 
-              className="hero-video-element"
-              key={config.hero.videoUrl}
-              onCanPlay={() => setVideoLoaded(true)}
-            >
-              <source src={config.hero.videoUrl} type="video/mp4" />
-            </video>
-          ) : null}
-          <div className="hero-overlay-dark"></div>
-        </div>
+        <div className="hero-overlay-dark"></div>
         
         <div className="hero-container-center">
           <div className={`hero-content-center ${!cargando ? 'hero-text-ready' : ''}`}>
@@ -179,15 +136,15 @@ function Home() {
         </div>
       </section>
 
-      {/* Enfoque Corporativo y Bancario */}
+      {/* Enfoque Corporativo */}
       <section className="enfoque-corporativo">
         <div className="container">
           <div className={`enfoque-content ${enfoqueClass}`} ref={enfoqueRef}>
-            <h2>Expertos en proyectos corporativos y bancarios</h2>
+            <h2>Expertos en Proyectos<br />corporativos e industriales</h2>
             <p>
-              Con más de dos décadas de experiencia, nos especializamos en el desarrollo 
-              de espacios corporativos de alta complejidad, incluyendo entidades bancarias 
-              y proyectos empresariales que exigen los más altos estándares de calidad y seguridad.
+              Con más de dos décadas de experiencia, nos especializamos en el desarrollo
+              de espacios corporativos de alta complejidad, incluyendo proyectos industriales
+              y empresariales que exigen los más altos estándares de calidad y seguridad.
             </p>
           </div>
         </div>
@@ -320,10 +277,10 @@ function Home() {
           <div className={`empresas-header ${clientesInView ? 'animate-in' : ''}`}>
             <h2>Empresas e instituciones que confían en nosotros</h2>
             <p>
-              Somos la elección confiable de grandes marcas e instituciones, gracias a nuestra 
-              especialización en proyectos para sectores corporativos y bancarios. 
-              Desarrollamos espacios de retail/comercial, oficinas, entornos industriales 
-              y proyectos bancarios con los más altos estándares.
+              Somos la elección confiable de grandes marcas e instituciones, gracias a nuestra
+              especialización en proyectos corporativos e industriales.
+              Desarrollamos espacios de retail, oficinas, entornos industriales
+              y proyectos de alta complejidad con los más altos estándares.
             </p>
           </div>
 

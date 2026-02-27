@@ -7,10 +7,10 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 const defaultConfig = {
   // Hero
   hero: {
-    videoUrl: "",
-    titulo: "",
-    tituloDestacado: "",
-    subtitulo: ""
+    heroImageUrl: "",
+    titulo: "Construimos",
+    tituloDestacado: "Espacios",
+    subtitulo: "Excelencia en construcción corporativa e industrial"
   },
 
   // Métricas
@@ -21,7 +21,7 @@ const defaultConfig = {
     },
     metrosConstructidos: {
       valor: 150000,
-      label: "Metros construidos"
+      label: "m²"
     },
     proyectos: {
       valor: 200,
@@ -38,9 +38,31 @@ export const loadConfig = async () => {
   try {
     const docRef = doc(db, 'otegui_config', 'home');
     const docSnap = await getDoc(docRef);
-    
+
     if (docSnap.exists()) {
-      cachedConfig = docSnap.data();
+      let data = docSnap.data();
+      // Migrar valores desactualizados
+      let needsUpdate = false;
+      if (!data.hero?.titulo || /dise[ñn]amos/i.test(data.hero.titulo)) {
+        data = { ...data, hero: { ...data.hero, titulo: defaultConfig.hero.titulo } };
+        needsUpdate = true;
+      }
+      if (!data.hero?.tituloDestacado) {
+        data = { ...data, hero: { ...data.hero, tituloDestacado: defaultConfig.hero.tituloDestacado } };
+        needsUpdate = true;
+      }
+      if (!data.hero?.subtitulo) {
+        data = { ...data, hero: { ...data.hero, subtitulo: defaultConfig.hero.subtitulo } };
+        needsUpdate = true;
+      }
+      if (data.metricas?.metrosConstructidos?.label === 'Metros construidos') {
+        data = { ...data, metricas: { ...data.metricas, metrosConstructidos: { ...data.metricas.metrosConstructidos, label: 'm²' } } };
+        needsUpdate = true;
+      }
+      if (needsUpdate) {
+        await setDoc(docRef, data);
+      }
+      cachedConfig = data;
       return cachedConfig;
     } else {
       // Si no existe, crear documento con config default

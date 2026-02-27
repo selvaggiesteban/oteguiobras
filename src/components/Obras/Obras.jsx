@@ -1,41 +1,73 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaSearch, FaMapMarkerAlt, FaRulerCombined, FaCalendarAlt } from 'react-icons/fa';
+import { collection, getDocs } from 'firebase/firestore';
+import { db, COLLECTIONS } from '../../firebase/config';
 import { useScrollReveal, useStaggerReveal } from '../../hooks/useAnimations';
-import { obrasData } from '../../data/obrasData';
 import './Obras.css';
 
+const CATEGORIA_ORDER = ['Retail', 'Retail / Comercial', 'Industrial', 'Oficinas', 'Proyectos', 'Bancos'];
+
 function Obras() {
+  const [obras, setObras] = useState([]);
+  const [cargando, setCargando] = useState(true);
   const [categoriaActiva, setCategoriaActiva] = useState('Todas');
   const [busqueda, setBusqueda] = useState('');
   const [ordenar, setOrdenar] = useState('reciente');
-  
+
   // Scroll reveal hooks
   const [heroContentRef, heroContentClass] = useScrollReveal('up');
   const [statsRef, statsRevealed] = useStaggerReveal();
   const [controlsRef, controlsClass] = useScrollReveal('up', { threshold: 0.1 });
   const [gridRef, gridRevealed] = useStaggerReveal({ threshold: 0.05 });
-  
-  const categorias = ['Todas', ...new Set(obrasData.map(obra => obra.categoria))];
-  
-  // Filtrar por categoría y búsqueda
-  let obrasFiltradas = categoriaActiva === 'Todas' 
-    ? obrasData 
-    : obrasData.filter(obra => obra.categoria === categoriaActiva);
 
-  // Filtrar por búsqueda
+  useEffect(() => {
+    const cargarObras = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, COLLECTIONS.OBRAS));
+        const data = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter(o => o.visible !== false)
+          .sort((a, b) => (a.orden || 0) - (b.orden || 0));
+        setObras(data);
+      } catch (err) {
+        console.error('Error al cargar obras:', err);
+      } finally {
+        setCargando(false);
+      }
+    };
+    cargarObras();
+  }, []);
+
+  const categorias = [
+    'Todas',
+    ...[...new Set(obras.map(obra => obra.categoria).filter(Boolean))].sort((a, b) => {
+      const aIdx = CATEGORIA_ORDER.indexOf(a);
+      const bIdx = CATEGORIA_ORDER.indexOf(b);
+      if (aIdx === -1 && bIdx === -1) return a.localeCompare(b);
+      if (aIdx === -1) return 1;
+      if (bIdx === -1) return -1;
+      return aIdx - bIdx;
+    })
+  ];
+
+  // Filtrar por categoría y búsqueda
+  let obrasFiltradas = categoriaActiva === 'Todas'
+    ? obras
+    : obras.filter(obra => obra.categoria === categoriaActiva);
+
   if (busqueda.trim()) {
-    obrasFiltradas = obrasFiltradas.filter(obra => 
-      obra.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      obra.ubicacion.toLowerCase().includes(busqueda.toLowerCase()) ||
-      obra.categoria.toLowerCase().includes(busqueda.toLowerCase())
+    obrasFiltradas = obrasFiltradas.filter(obra =>
+      obra.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      obra.ubicacion?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      obra.categoria?.toLowerCase().includes(busqueda.toLowerCase())
     );
   }
 
   // Ordenar
   const obrasOrdenadas = [...obrasFiltradas].sort((a, b) => {
-    if (ordenar === 'reciente') return b.año - a.año;
-    if (ordenar === 'antigua') return a.año - b.año;
+    if (ordenar === 'reciente') return (b.año || 0) - (a.año || 0);
+    if (ordenar === 'antigua') return (a.año || 0) - (b.año || 0);
     if (ordenar === 'nombre') return a.nombre.localeCompare(b.nombre);
     return 0;
   });
@@ -88,7 +120,7 @@ function Obras() {
                 className="search-input"
               />
               {busqueda && (
-                <button 
+                <button
                   className="clear-search"
                   onClick={() => setBusqueda('')}
                   aria-label="Limpiar búsqueda"
@@ -97,12 +129,12 @@ function Obras() {
                 </button>
               )}
             </div>
-            
+
             <div className="sort-control">
               <label htmlFor="ordenar">Ordenar:</label>
-              <select 
+              <select
                 id="ordenar"
-                value={ordenar} 
+                value={ordenar}
                 onChange={(e) => setOrdenar(e.target.value)}
                 className="sort-select"
               >
@@ -125,9 +157,9 @@ function Obras() {
                 >
                   {categoria}
                   <span className="filter-count">
-                    {categoria === 'Todas' 
-                      ? obrasData.length 
-                      : obrasData.filter(o => o.categoria === categoria).length
+                    {categoria === 'Todas'
+                      ? obras.length
+                      : obras.filter(o => o.categoria === categoria).length
                     }
                   </span>
                 </button>
@@ -139,7 +171,7 @@ function Obras() {
           <div className="obras-count">
             {busqueda && (
               <span className="search-result-text">
-                Resultados para "{busqueda}": 
+                Resultados para "{busqueda}":
               </span>
             )}
             <span className="count-number">
@@ -147,8 +179,13 @@ function Obras() {
             </span>
           </div>
 
-          {/* Grid de obras */}
-          {obrasOrdenadas.length > 0 ? (
+          {/* Loading */}
+          {cargando ? (
+            <div className="obras-loading">
+              <div className="loading-spinner"></div>
+              <p>Cargando proyectos...</p>
+            </div>
+          ) : obrasOrdenadas.length > 0 ? (
             <div className={`obras-grid stagger-scale ${gridRevealed ? 'revealed' : ''}`} ref={gridRef}>
               {obrasOrdenadas.map(obra => (
                 <article key={obra.id} className="obra-card">
@@ -166,20 +203,24 @@ function Obras() {
                     <div className="obra-content">
                       <h3 className="obra-title">{obra.nombre}</h3>
                       <div className="obra-details">
-                        <div className="obra-detail-item">
-                          <FaMapMarkerAlt />
-                          <span>{obra.ubicacion}</span>
-                        </div>
-                        {obra.metroCuadrados && (
+                        {obra.ubicacion && (
                           <div className="obra-detail-item">
-                            <FaRulerCombined />
-                            <span>{obra.metroCuadrados} m²</span>
+                            <FaMapMarkerAlt />
+                            <span>{obra.ubicacion}</span>
                           </div>
                         )}
-                        <div className="obra-detail-item">
-                          <FaCalendarAlt />
-                          <span>{obra.año}</span>
-                        </div>
+                        {obra.metrosCuadrados && (
+                          <div className="obra-detail-item">
+                            <FaRulerCombined />
+                            <span>{obra.metrosCuadrados} m²</span>
+                          </div>
+                        )}
+                        {obra.año && (
+                          <div className="obra-detail-item">
+                            <FaCalendarAlt />
+                            <span>{obra.año}</span>
+                          </div>
+                        )}
                       </div>
                       {obra.descripcion && (
                         <p className="obra-description">{obra.descripcion}</p>
@@ -194,7 +235,7 @@ function Obras() {
               <div className="no-results-icon">🔍</div>
               <h3>No se encontraron proyectos</h3>
               <p>Intenta con otros términos de búsqueda o cambia los filtros</p>
-              <button 
+              <button
                 className="btn-reset-filters"
                 onClick={() => {
                   setBusqueda('');

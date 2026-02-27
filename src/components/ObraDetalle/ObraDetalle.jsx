@@ -1,13 +1,15 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db, COLLECTIONS } from '../../firebase/config';
 import { useScrollReveal } from '../../hooks/useAnimations';
-import { obrasData } from '../../data/obrasData';
 import './ObraDetalle.css';
 
 function ObraDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const obra = obrasData.find(o => o.id === parseInt(id));
+  const [obra, setObra] = useState(null);
+  const [cargando, setCargando] = useState(true);
   const [imagenActual, setImagenActual] = useState(0);
 
   // Scroll reveal hooks
@@ -15,6 +17,34 @@ function ObraDetalle() {
   const [galeriaRef, galeriaClass] = useScrollReveal('up', { threshold: 0.05 });
   const [infoRef, infoClass] = useScrollReveal('up', { threshold: 0.1 });
   const [ctaRef, ctaClass] = useScrollReveal('scale');
+
+  useEffect(() => {
+    const cargarObra = async () => {
+      try {
+        const docRef = doc(db, COLLECTIONS.OBRAS, id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setObra({ id: docSnap.id, ...docSnap.data() });
+        }
+      } catch (err) {
+        console.error('Error al cargar obra:', err);
+      } finally {
+        setCargando(false);
+      }
+    };
+    cargarObra();
+  }, [id]);
+
+  if (cargando) {
+    return (
+      <div className="obra-detalle-error">
+        <div className="container">
+          <div className="loading-spinner"></div>
+          <p>Cargando proyecto...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!obra) {
     return (
@@ -100,10 +130,12 @@ function ObraDetalle() {
       <section className="obra-galeria">
         <div className="container">
           <div className={`galeria-principal ${galeriaClass}`} ref={galeriaRef}>
-            <img 
-              src={imagenes[imagenActual]} 
-              alt={`${obra.nombre} - imagen ${imagenActual + 1}`} 
+            <img
+              key={imagenActual}
+              src={imagenes[imagenActual]}
+              alt={`${obra.nombre} - imagen ${imagenActual + 1}`}
               className="imagen-principal"
+              onError={(e) => { e.currentTarget.style.opacity = '0'; }}
             />
             {imagenes.length > 1 && (
               <>

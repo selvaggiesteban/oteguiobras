@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db, COLLECTIONS } from '../../firebase/config';
+import { useToast } from '../Toast';
 import { useScrollReveal, useStaggerReveal } from '../../hooks/useAnimations';
 import './Contacto.css';
 
@@ -10,20 +13,60 @@ function Contacto() {
     empresa: '',
     mensaje: ''
   });
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
   // Scroll reveal hooks
   const [heroRef, heroClass] = useScrollReveal('up');
   const [sidebarRef, sidebarRevealed] = useStaggerReveal({ threshold: 0.1 });
   const [formRef, formClass] = useScrollReveal('right', { threshold: 0.1 });
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.nombre.trim() || formData.nombre.trim().length < 2) {
+      newErrors.nombre = 'Ingresá un nombre válido';
+    }
+    if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Ingresá un email válido';
+    }
+    if (!formData.mensaje.trim() || formData.mensaje.trim().length < 10) {
+      newErrors.mensaje = 'El mensaje debe tener al menos 10 caracteres';
+    }
+    return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    alert('¡Gracias por contactarnos! Te responderemos en breve.');
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    setLoading(true);
+    try {
+      await addDoc(collection(db, COLLECTIONS.CONTACTO), {
+        ...formData,
+        leido: false,
+        fechaEnvio: serverTimestamp()
+      });
+      toast.success('¡Mensaje enviado! Te responderemos en breve.');
+      setFormData({ nombre: '', email: '', telefono: '', empresa: '', mensaje: '' });
+      setErrors({});
+    } catch (err) {
+      console.error('Error al enviar mensaje:', err);
+      toast.error('Hubo un error al enviar. Intentá de nuevo.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -114,10 +157,10 @@ function Contacto() {
                 <h2>Envianos tu consulta</h2>
                 <p>Responderemos en menos de 24 horas hábiles</p>
               </div>
-              
-              <form className="contacto-form" onSubmit={handleSubmit}>
+
+              <form className="contacto-form" onSubmit={handleSubmit} noValidate>
                 <div className="form-row">
-                  <div className="form-group">
+                  <div className={`form-group ${errors.nombre ? 'has-error' : ''}`}>
                     <label htmlFor="nombre">Nombre Completo *</label>
                     <input
                       type="text"
@@ -125,12 +168,13 @@ function Contacto() {
                       name="nombre"
                       value={formData.nombre}
                       onChange={handleChange}
-                      required
                       placeholder="Juan Pérez"
+                      disabled={loading}
                     />
+                    {errors.nombre && <span className="form-error">{errors.nombre}</span>}
                   </div>
 
-                  <div className="form-group">
+                  <div className={`form-group ${errors.email ? 'has-error' : ''}`}>
                     <label htmlFor="email">Email *</label>
                     <input
                       type="email"
@@ -138,9 +182,10 @@ function Contacto() {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      required
                       placeholder="juan@empresa.com"
+                      disabled={loading}
                     />
+                    {errors.email && <span className="form-error">{errors.email}</span>}
                   </div>
                 </div>
 
@@ -154,6 +199,7 @@ function Contacto() {
                       value={formData.telefono}
                       onChange={handleChange}
                       placeholder="+54 11 1234-5678"
+                      disabled={loading}
                     />
                   </div>
 
@@ -166,28 +212,39 @@ function Contacto() {
                       value={formData.empresa}
                       onChange={handleChange}
                       placeholder="Nombre de tu empresa"
+                      disabled={loading}
                     />
                   </div>
                 </div>
 
-                <div className="form-group">
+                <div className={`form-group ${errors.mensaje ? 'has-error' : ''}`}>
                   <label htmlFor="mensaje">Mensaje *</label>
                   <textarea
                     id="mensaje"
                     name="mensaje"
                     value={formData.mensaje}
                     onChange={handleChange}
-                    required
                     rows="6"
                     placeholder="Contános sobre tu proyecto..."
+                    disabled={loading}
                   ></textarea>
+                  {errors.mensaje && <span className="form-error">{errors.mensaje}</span>}
                 </div>
 
-                <button type="submit" className="btn-submit">
-                  Enviar Consulta
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                <button type="submit" className="btn-submit" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <span className="btn-spinner"></span>
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      Enviar Consulta
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </>
+                  )}
                 </button>
               </form>
             </div>

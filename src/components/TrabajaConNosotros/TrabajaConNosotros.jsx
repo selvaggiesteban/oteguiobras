@@ -41,8 +41,8 @@ function TrabajaConNosotros() {
         </div>
         <div className="container">
           <div className={`page-hero-content ${heroClass}`} ref={heroRef}>
-            <span className="page-badge">Carreras</span>
-            <h1>Construye tu futuro con nosotros</h1>
+            <span className="page-badge">Unite!</span>
+            <h1>Unite a nuestro equipo</h1>
             <p>
               Sumáte a un equipo líder en la industria de la construcción corporativa.
               Buscamos profesionales apasionados que quieran crecer y dejar su huella.

@@ -1,4 +1,4 @@
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
@@ -35,26 +35,35 @@ function ScrollProgress() {
   );
 }
 
+function AppLayout() {
+  const location = useLocation();
+  const isAdmin = location.pathname === '/admin';
+
+  return (
+    <div className="app">
+      {!isAdmin && <Header />}
+      <main className={isAdmin ? '' : 'main-content'}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/obras" element={<Obras />} />
+          <Route path="/obras/:id" element={<ObraDetalle />} />
+          <Route path="/equipo" element={<Equipo />} />
+          <Route path="/contacto" element={<Contacto />} />
+          <Route path="/trabaja-con-nosotros" element={<TrabajaConNosotros />} />
+          <Route path="/admin" element={<Admin />} />
+        </Routes>
+      </main>
+      {!isAdmin && <Footer />}
+    </div>
+  );
+}
+
 function App() {
   return (
     <Router>
       <ScrollToTop />
       <ScrollProgress />
-      <div className="app">
-        <Header />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/obras" element={<Obras />} />
-            <Route path="/obras/:id" element={<ObraDetalle />} />
-            <Route path="/equipo" element={<Equipo />} />
-            <Route path="/contacto" element={<Contacto />} />
-            <Route path="/trabaja-con-nosotros" element={<TrabajaConNosotros />} />
-            <Route path="/admin" element={<Admin />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
+      <AppLayout />
     </Router>
   );
 }

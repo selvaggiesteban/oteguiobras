@@ -26,27 +26,21 @@ const defaultClientes = [
   },
   {
     id: 4,
-    nombre: "Itaú",
-    logoUrl: "/logos/itau.svg",
+    nombre: "Mercedes-Benz",
+    logoUrl: "/logos/mercedes-benz.svg",
     orden: 4
   },
   {
     id: 5,
-    nombre: "Mercedes-Benz",
-    logoUrl: "/logos/mercedes-benz.svg",
+    nombre: "Pfizer",
+    logoUrl: "/logos/pfizer.svg",
     orden: 5
   },
   {
     id: 6,
-    nombre: "Pfizer",
-    logoUrl: "/logos/pfizer.svg",
-    orden: 6
-  },
-  {
-    id: 7,
     nombre: "Samsung",
     logoUrl: "/logos/samsung.svg",
-    orden: 7
+    orden: 6
   }
 ];
 
@@ -74,6 +68,13 @@ export const loadClientes = async () => {
         return defaultClientes;
       }
       cachedClientes = clientesFirebase.sort((a, b) => a.orden - b.orden);
+      // Migrar: quitar Itaú si aún está en Firebase
+      const sinItau = cachedClientes.filter(c => c.nombre !== 'Itaú');
+      if (sinItau.length !== cachedClientes.length) {
+        const reordenados = sinItau.map((c, i) => ({ ...c, orden: i + 1 }));
+        await setDoc(docRef, { clientes: reordenados });
+        cachedClientes = reordenados;
+      }
       return cachedClientes;
     } else {
       // Si no existe, crear documento con clientes default
