@@ -65,11 +65,13 @@ function AppLayout() {
 
 function App() {
   return (
-    <Router>
-      <ScrollToTop />
-      <ScrollProgress />
-      <AppLayout />
-    </Router>
+    <AuthProvider>
+      <Router>
+        <ScrollToTop />
+        <ScrollProgress />
+        <AppLayout />
+      </Router>
+    </AuthProvider>
   );
 }
 
