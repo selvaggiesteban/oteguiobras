@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node -e \"const fs=require('fs'),path=require('path');fs.cpSync(path.join('api'),path.join('dist','api'),{recursive:true});console.log('api copied to dist')\"",
+    "deploy": "npm run build && node -e \"const fs=require('fs');fs.copyFileSync('dist/index.html','index.html');if(!fs.existsSync('assets'))fs.mkdirSync('assets');fs.cpSync('dist/assets','assets',{recursive:true});console.log('dist deployed to root')\"",
     "lint": "eslint .",
     "preview": "vite preview"
   },
