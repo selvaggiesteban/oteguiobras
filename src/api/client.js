@@ -1,7 +1,4 @@
-const RAW_API_URL = import.meta.env.VITE_API_URL || '/api';
-// Prod (LatinCloud) y XAMPP ambos usan VITE_API_URL=/oteguiobras/api baked in
-// — no auto-detection needed. Subpath ya incluido en RAW_API_URL.
-const API_URL = RAW_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || 'api';
 
 class ApiClient {
   constructor(baseUrl) {
