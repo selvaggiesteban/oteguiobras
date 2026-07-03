@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../helpers/mail.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -49,6 +50,12 @@ if ($method === 'POST') {
     $_POST['linkedin'] ?? null,
     $cv_url
   ]);
+
+  // Send admin notification (fire and forget)
+  sendAdminNotification(
+    "Nueva postulación de {$nombre} — Otegui Obras",
+    buildPostulacionEmail($_POST + ['cv_url' => $cv_url])
+  );
 
   jsonResponse(['success' => true, 'id' => $db->lastInsertId()], 201);
 }

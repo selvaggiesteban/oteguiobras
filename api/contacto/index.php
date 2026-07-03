@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../helpers/mail.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -25,6 +26,12 @@ if ($method === 'POST') {
     $data['empresa'] ?? null,
     $mensaje
   ]);
+
+  // Send admin notification (fire and forget)
+  sendAdminNotification(
+    "Nuevo mensaje de {$nombre} — Otegui Obras",
+    buildContactEmail($data)
+  );
 
   jsonResponse(['success' => true, 'id' => $db->lastInsertId()], 201);
 }
