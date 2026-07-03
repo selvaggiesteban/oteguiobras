@@ -29,7 +29,7 @@
 
 .beneficios-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   gap: 2rem;
 }
 
@@ -244,6 +244,28 @@
 }
 
 /* Responsive */
+@media (max-width: 1440px) {
+  .beneficios-section {
+    padding: 4rem 0;
+  }
+
+  .cv-section {
+    padding: 4rem 0;
+  }
+
+  .section-intro h2 {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+  }
+
+  .cv-info h2 {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+  }
+
+  .section-intro {
+    margin: 0 auto 3rem;
+  }
+}
+
 @media (max-width: 1024px) {
   .cv-layout {
     grid-template-columns: 1fr;

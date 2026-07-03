@@ -1,5 +1,15 @@
 /* Equipo.css - Premium Design */
 
+/* Override del overlay del hero para equipo - menos oscuro */
+.equipo-page .page-hero-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(20, 20, 20, 0.55) 0%,
+    rgba(30, 30, 30, 0.45) 60%,
+    rgba(40, 35, 30, 0.5) 100%
+  );
+}
+
 .equipo-section {
   padding: 5rem 0;
   background: #fafaf8;
@@ -29,7 +39,7 @@
 /* Equipo Grid */
 .equipo-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 2rem;
 }
 
@@ -228,9 +238,39 @@
 }
 
 /* Responsive */
+@media (max-width: 1440px) {
+  .equipo-section {
+    padding: 4rem 0;
+  }
+
+  .section-intro {
+    margin: 0 auto 3rem;
+  }
+
+  .section-intro h2 {
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+  }
+
+  .section-intro p {
+    font-size: 1rem;
+  }
+
+  .miembro-nombre {
+    font-size: 1.25rem;
+  }
+
+  .equipo-cta {
+    padding: clamp(3rem, 5vw, 4rem) 0;
+  }
+
+  .cta-box h2 {
+    font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  }
+}
+
 @media (max-width: 1024px) {
   .equipo-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
     gap: 2.5rem;
   }
 }
@@ -249,9 +289,9 @@
   }
 
   .section-intro p {
-    font-size: 1.0625rem;
+    font-size: 0.9375rem;
   }
-  
+
   .equipo-grid {
     grid-template-columns: 1fr;
     gap: 2rem;
@@ -262,7 +302,7 @@
   }
 
   .miembro-nombre {
-    font-size: 1.375rem;
+    font-size: 1.2rem;
   }
 
   .miembro-cargo {
@@ -292,13 +332,13 @@
   }
 
   .cta-box p {
-    font-size: 1.0625rem;
+    font-size: 0.9375rem;
     margin-bottom: 2rem;
   }
 
   .btn-cta-secondary {
     padding: 1.25rem 2.5rem;
-    font-size: 0.9375rem;
+    font-size: 0.8125rem;
   }
 }
 

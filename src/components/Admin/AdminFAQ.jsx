@@ -1,13 +1,5 @@
 import { useState, useEffect } from 'react';
-import { 
-  getFAQ, 
-  loadFAQ, 
-  agregarPregunta, 
-  eliminarPregunta, 
-  editarPregunta,
-  reordenarPreguntas,
-  cargarDatosDemo 
-} from '../../data/faqData';
+import { getFaqConfig, updateFaqConfig } from '../../api/config';
 import { FaTrash, FaEdit, FaSave, FaTimes, FaArrowUp, FaArrowDown, FaPlus } from 'react-icons/fa';
 import './AdminFAQ.css';
 
@@ -24,21 +16,13 @@ const AdminFAQ = () => {
 
   useEffect(() => {
     cargarPreguntas();
-
-    // Escuchar cambios
-    const handleFAQChange = () => {
-      cargarPreguntas();
-    };
-
-    window.addEventListener('faqUpdated', handleFAQChange);
-    return () => window.removeEventListener('faqUpdated', handleFAQChange);
   }, []);
 
   const cargarPreguntas = async () => {
     try {
       setCargando(true);
-      const data = await loadFAQ();
-      setPreguntas(data);
+      const data = await getFaqConfig();
+      setPreguntas(data.preguntas || []);
     } catch (error) {
       mostrarMensaje('Error cargando preguntas', 'error');
     } finally {
@@ -53,7 +37,7 @@ const AdminFAQ = () => {
 
   const handleAgregarPregunta = async (e) => {
     e.preventDefault();
-    
+
     if (!nuevaPregunta.trim() || !nuevaRespuesta.trim()) {
       mostrarMensaje('Por favor completa la pregunta y respuesta', 'error');
       return;
@@ -61,11 +45,12 @@ const AdminFAQ = () => {
 
     try {
       setGuardando(true);
-      await agregarPregunta(nuevaPregunta.trim(), nuevaRespuesta.trim());
+      const updatedList = [...preguntas, { id: Date.now().toString(), pregunta: nuevaPregunta.trim(), respuesta: nuevaRespuesta.trim() }];
+      await updateFaqConfig({ preguntas: updatedList });
+      setPreguntas(updatedList);
       setNuevaPregunta('');
       setNuevaRespuesta('');
       mostrarMensaje('Pregunta agregada correctamente');
-      cargarPreguntas();
     } catch (error) {
       mostrarMensaje('Error al agregar pregunta', 'error');
     } finally {
@@ -78,9 +63,10 @@ const AdminFAQ = () => {
 
     try {
       setGuardando(true);
-      await eliminarPregunta(id);
+      const updatedList = preguntas.filter(p => p.id !== id);
+      await updateFaqConfig({ preguntas: updatedList });
+      setPreguntas(updatedList);
       mostrarMensaje('Pregunta eliminada correctamente');
-      cargarPreguntas();
     } catch (error) {
       mostrarMensaje('Error al eliminar pregunta', 'error');
     } finally {
@@ -108,12 +94,15 @@ const AdminFAQ = () => {
 
     try {
       setGuardando(true);
-      await editarPregunta(id, preguntaEdit.trim(), respuestaEdit.trim());
+      const updatedList = preguntas.map(p =>
+        p.id === id ? { ...p, pregunta: preguntaEdit.trim(), respuesta: respuestaEdit.trim() } : p
+      );
+      await updateFaqConfig({ preguntas: updatedList });
+      setPreguntas(updatedList);
       setEditando(null);
       setPreguntaEdit('');
       setRespuestaEdit('');
       mostrarMensaje('Pregunta actualizada correctamente');
-      cargarPreguntas();
     } catch (error) {
       mostrarMensaje('Error al actualizar pregunta', 'error');
     } finally {
@@ -124,8 +113,12 @@ const AdminFAQ = () => {
   const handleMoverArriba = async (id) => {
     try {
       setGuardando(true);
-      await reordenarPreguntas(id, 'arriba');
-      cargarPreguntas();
+      const index = preguntas.findIndex(p => p.id === id);
+      if (index <= 0) return;
+      const swappedList = [...preguntas];
+      [swappedList[index - 1], swappedList[index]] = [swappedList[index], swappedList[index - 1]];
+      await updateFaqConfig({ preguntas: swappedList });
+      setPreguntas(swappedList);
     } catch (error) {
       mostrarMensaje('Error al reordenar', 'error');
     } finally {
@@ -136,25 +129,14 @@ const AdminFAQ = () => {
   const handleMoverAbajo = async (id) => {
     try {
       setGuardando(true);
-      await reordenarPreguntas(id, 'abajo');
-      cargarPreguntas();
+      const index = preguntas.findIndex(p => p.id === id);
+      if (index < 0 || index >= preguntas.length - 1) return;
+      const swappedList = [...preguntas];
+      [swappedList[index], swappedList[index + 1]] = [swappedList[index + 1], swappedList[index]];
+      await updateFaqConfig({ preguntas: swappedList });
+      setPreguntas(swappedList);
     } catch (error) {
       mostrarMensaje('Error al reordenar', 'error');
-    } finally {
-      setGuardando(false);
-    }
-  };
-
-  const handleCargarDemo = async () => {
-    if (!confirm('¿Cargar datos de demostración? Esto reemplazará las preguntas actuales.')) return;
-
-    try {
-      setGuardando(true);
-      await cargarDatosDemo();
-      mostrarMensaje('Datos de demostración cargados');
-      cargarPreguntas();
-    } catch (error) {
-      mostrarMensaje('Error al cargar datos demo', 'error');
     } finally {
       setGuardando(false);
     }
@@ -168,13 +150,6 @@ const AdminFAQ = () => {
     <div className="admin-faq">
       <div className="admin-faq-header">
         <h2>Preguntas Frecuentes</h2>
-        <button 
-          className="btn-demo" 
-          onClick={handleCargarDemo}
-          disabled={guardando}
-        >
-          Cargar Datos Demo
-        </button>
       </div>
 
       {mensaje && (

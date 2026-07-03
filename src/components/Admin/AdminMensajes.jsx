@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
-import { db, COLLECTIONS } from '../../firebase/config';
+import { getMensajes, updateMensaje, deleteMensaje } from '../../api/contacto';
 
 const IconTrash = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -14,7 +13,7 @@ const IconTrash = () => (
 
 const IconMail = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0 1.1.9-2 2-2z"/>
     <polyline points="22,6 12,13 2,6"/>
   </svg>
 );
@@ -31,19 +30,10 @@ function AdminMensajes() {
   const cargarMensajes = async () => {
     setCargando(true);
     try {
-      const q = query(collection(db, COLLECTIONS.CONTACTO), orderBy('fechaEnvio', 'desc'));
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      const data = await getMensajes();
       setMensajes(data);
     } catch (err) {
-      // Fallback sin ordenamiento si no existe el índice aún
-      try {
-        const snapshot = await getDocs(collection(db, COLLECTIONS.CONTACTO));
-        const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        setMensajes(data);
-      } catch (err2) {
-        console.error('Error cargando mensajes:', err2);
-      }
+      console.error('Error cargando mensajes:', err);
     } finally {
       setCargando(false);
     }
@@ -51,8 +41,8 @@ function AdminMensajes() {
 
   const marcarLeido = async (id) => {
     try {
-      await updateDoc(doc(db, COLLECTIONS.CONTACTO, id), { leido: true });
-      setMensajes(prev => prev.map(m => m.id === id ? { ...m, leido: true } : m));
+      await updateMensaje(id, { leido: true });
+      cargarMensajes();
     } catch (err) {
       console.error('Error al marcar como leído:', err);
     }
@@ -61,8 +51,8 @@ function AdminMensajes() {
   const eliminar = async (id) => {
     if (!window.confirm('¿Eliminar este mensaje?')) return;
     try {
-      await deleteDoc(doc(db, COLLECTIONS.CONTACTO, id));
-      setMensajes(prev => prev.filter(m => m.id !== id));
+      await deleteMensaje(id);
+      cargarMensajes();
       if (seleccionado?.id === id) setSeleccionado(null);
     } catch (err) {
       console.error('Error al eliminar mensaje:', err);
@@ -75,8 +65,8 @@ function AdminMensajes() {
   };
 
   const formatFecha = (ts) => {
-    if (!ts?.toDate) return '—';
-    return ts.toDate().toLocaleDateString('es-AR', {
+    if (!ts) return '—';
+    return new Date(ts).toLocaleDateString('es-AR', {
       day: '2-digit', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit'
     });
@@ -120,7 +110,7 @@ function AdminMensajes() {
                       {!m.leido && <span className="adm-badge adm-badge-accent" style={{ fontSize: '0.625rem' }}>Nuevo</span>}
                     </h3>
                     <p>{m.email}{m.empresa ? ` · ${m.empresa}` : ''}</p>
-                    <p style={{ color: '#aaa', fontSize: '0.75rem', marginTop: '2px' }}>{formatFecha(m.fechaEnvio)}</p>
+                    <p style={{ color: '#aaa', fontSize: '0.75rem', marginTop: '2px' }}>{formatFecha(m.fecha_envio)}</p>
                   </div>
                   <div className="adm-list-item-actions" onClick={e => e.stopPropagation()}>
                     <button
@@ -173,7 +163,7 @@ function AdminMensajes() {
               )}
               <div className="msg-field">
                 <span className="msg-label">Fecha</span>
-                <span className="msg-value">{formatFecha(seleccionado.fechaEnvio)}</span>
+                <span className="msg-value">{formatFecha(seleccionado.fecha_envio)}</span>
               </div>
               <div className="msg-field msg-field-full">
                 <span className="msg-label">Mensaje</span>

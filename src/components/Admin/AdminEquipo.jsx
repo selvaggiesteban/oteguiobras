@@ -1,47 +1,27 @@
-import { useState, useEffect } from 'react';
-import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db, COLLECTIONS } from '../../firebase/config';
+import { useState, useEffect, useRef } from 'react';
+import { getEquipo, createMiembro, updateMiembro, deleteMiembro, uploadMiembroFoto } from '../../api/equipo';
 import { useToast } from '../Toast';
 import './Admin.css';
+
+const EMPTY_FORM = { nombre: '', cargo: '', foto: '', visible: true, orden: 0 };
 
 function AdminEquipo() {
   const toast = useToast();
   const [equipo, setEquipo] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [editando, setEditando] = useState(null);
-  
-  const [nuevoMiembro, setNuevoMiembro] = useState({
-    nombre: '',
-    cargo: '',
-    especialidad: '',
-    email: '',
-    telefono: '',
-    foto: '',
-    linkedin: '',
-    descripcion: '',
-    destacado: false,
-    visible: true,
-    orden: 0
-  });
+  const [nuevoMiembro, setNuevoMiembro] = useState({ ...EMPTY_FORM });
+  const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    cargarEquipo();
-  }, []);
+  useEffect(() => { cargarEquipo(); }, []);
 
   const cargarEquipo = async () => {
     try {
       setCargando(true);
-      const equipoRef = collection(db, COLLECTIONS.EQUIPO);
-      const snapshot = await getDocs(equipoRef);
-      
-      const equipoData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
-      equipoData.sort((a, b) => (a.orden || 0) - (b.orden || 0));
-      setEquipo(equipoData);
+      const data = await getEquipo();
+      setEquipo(data);
     } catch (error) {
       console.error('Error al cargar equipo:', error);
       toast.error('Error al cargar equipo');
@@ -50,45 +30,46 @@ function AdminEquipo() {
     }
   };
 
+  const handleFotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setSubiendoFoto(true);
+    try {
+      const { url } = await uploadMiembroFoto(file);
+      setNuevoMiembro(prev => ({ ...prev, foto: url }));
+      toast.success('Foto subida');
+    } catch (err) {
+      console.error('Error subiendo foto:', err);
+      toast.error('Error al subir la foto');
+    } finally {
+      setSubiendoFoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!nuevoMiembro.nombre || !nuevoMiembro.cargo) {
-      toast.warning('El nombre y cargo son obligatorios');
+    if (!nuevoMiembro.nombre && !nuevoMiembro.cargo && !nuevoMiembro.foto) {
+      toast.warning('Completá al menos un campo');
       return;
     }
-
     setGuardando(true);
-
     try {
+      const data = {
+        nombre: nuevoMiembro.nombre,
+        cargo: nuevoMiembro.cargo,
+        foto: nuevoMiembro.foto,
+        visible: nuevoMiembro.visible,
+        orden: editando ? nuevoMiembro.orden : equipo.length,
+      };
       if (editando) {
-        const miembroRef = doc(db, COLLECTIONS.EQUIPO, editando);
-        await updateDoc(miembroRef, {
-          ...nuevoMiembro,
-          fechaModificacion: serverTimestamp()
-        });
-        toast.success('Miembro actualizado exitosamente');
+        await updateMiembro(editando, data);
+        toast.success('Miembro actualizado');
       } else {
-        await addDoc(collection(db, COLLECTIONS.EQUIPO), {
-          ...nuevoMiembro,
-          fechaCreacion: serverTimestamp()
-        });
-        toast.success('Miembro agregado exitosamente');
+        await createMiembro(data);
+        toast.success('Miembro agregado');
       }
-
-      setNuevoMiembro({
-        nombre: '',
-        cargo: '',
-        especialidad: '',
-        email: '',
-        telefono: '',
-        foto: '',
-        linkedin: '',
-        descripcion: '',
-        destacado: false,
-        visible: true,
-        orden: 0
-      });
+      setNuevoMiembro({ ...EMPTY_FORM });
       setEditando(null);
       cargarEquipo();
     } catch (error) {
@@ -103,25 +84,18 @@ function AdminEquipo() {
     setNuevoMiembro({
       nombre: miembro.nombre || '',
       cargo: miembro.cargo || '',
-      especialidad: miembro.especialidad || '',
-      email: miembro.email || '',
-      telefono: miembro.telefono || '',
       foto: miembro.foto || '',
-      linkedin: miembro.linkedin || '',
-      descripcion: miembro.descripcion || '',
-      destacado: miembro.destacado || false,
       visible: miembro.visible !== undefined ? miembro.visible : true,
-      orden: miembro.orden || 0
+      orden: miembro.orden || 0,
     });
     setEditando(miembro.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleEliminar = async (id) => {
-    if (!confirm('¿Estás seguro de eliminar este miembro?')) return;
-
+  const handleEliminar = async (miembro) => {
+    if (!confirm('¿Eliminar este miembro?')) return;
     try {
-      await deleteDoc(doc(db, COLLECTIONS.EQUIPO, id));
+      await deleteMiembro(miembro.id);
       toast.success('Miembro eliminado');
       cargarEquipo();
     } catch (error) {
@@ -130,37 +104,51 @@ function AdminEquipo() {
     }
   };
 
-  const toggleVisibilidad = async (miembro) => {
+  const handleCancelar = () => {
+    setNuevoMiembro({ ...EMPTY_FORM });
+    setEditando(null);
+  };
+
+  const handleMoverArriba = async (index) => {
+    if (index === 0) return;
     try {
-      const miembroRef = doc(db, COLLECTIONS.EQUIPO, miembro.id);
-      const nuevoEstado = !miembro.visible;
-      await updateDoc(miembroRef, {
-        visible: nuevoEstado,
-        fechaModificacion: serverTimestamp()
-      });
-      toast.success(nuevoEstado ? 'Miembro visible en el sitio' : 'Miembro oculto del sitio');
-      cargarEquipo();
+      const a = equipo[index - 1];
+      const b = equipo[index];
+      await Promise.all([
+        updateMiembro(a.id, { orden: b.orden }),
+        updateMiembro(b.id, { orden: a.orden }),
+      ]);
+      const nuevo = [...equipo];
+      [nuevo[index - 1], nuevo[index]] = [nuevo[index], nuevo[index - 1]];
+      nuevo[index - 1].orden = equipo[index].orden;
+      nuevo[index].orden = equipo[index - 1].orden;
+      setEquipo(nuevo);
+      toast.success('Orden actualizado');
     } catch (error) {
-      console.error('Error al cambiar visibilidad:', error);
-      toast.error('Error al cambiar visibilidad');
+      console.error('Error al reordenar:', error);
+      toast.error('Error al reordenar');
     }
   };
 
-  const handleCancelar = () => {
-    setNuevoMiembro({
-      nombre: '',
-      cargo: '',
-      especialidad: '',
-      email: '',
-      telefono: '',
-      foto: '',
-      linkedin: '',
-      descripcion: '',
-      destacado: false,
-      visible: true,
-      orden: 0
-    });
-    setEditando(null);
+  const handleMoverAbajo = async (index) => {
+    if (index >= equipo.length - 1) return;
+    try {
+      const a = equipo[index];
+      const b = equipo[index + 1];
+      await Promise.all([
+        updateMiembro(a.id, { orden: b.orden }),
+        updateMiembro(b.id, { orden: a.orden }),
+      ]);
+      const nuevo = [...equipo];
+      [nuevo[index], nuevo[index + 1]] = [nuevo[index + 1], nuevo[index]];
+      nuevo[index].orden = equipo[index + 1].orden;
+      nuevo[index + 1].orden = equipo[index].orden;
+      setEquipo(nuevo);
+      toast.success('Orden actualizado');
+    } catch (error) {
+      console.error('Error al reordenar:', error);
+      toast.error('Error al reordenar');
+    }
   };
 
   if (cargando) {
@@ -169,133 +157,53 @@ function AdminEquipo() {
 
   return (
     <div className="admin-section">
-      <h2>{editando ? '✏️ Editar Miembro' : '➕ Nuevo Miembro del Equipo'}</h2>
-      
+      <h2>{editando ? 'Editar Miembro' : 'Nuevo Miembro del Equipo'}</h2>
+
       <form onSubmit={handleSubmit} className="admin-form">
         <div className="form-row">
           <div className="form-group">
-            <label>Nombre Completo *</label>
+            <label>Nombre Completo</label>
             <input
               type="text"
               value={nuevoMiembro.nombre}
               onChange={(e) => setNuevoMiembro({ ...nuevoMiembro, nombre: e.target.value })}
               placeholder="Ej: Juan Pérez"
-              required
             />
           </div>
-
           <div className="form-group">
-            <label>Cargo *</label>
+            <label>Cargo</label>
             <input
               type="text"
               value={nuevoMiembro.cargo}
               onChange={(e) => setNuevoMiembro({ ...nuevoMiembro, cargo: e.target.value })}
               placeholder="Ej: Director de Obras"
-              required
-            />
-          </div>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label>Especialidad</label>
-            <input
-              type="text"
-              value={nuevoMiembro.especialidad}
-              onChange={(e) => setNuevoMiembro({ ...nuevoMiembro, especialidad: e.target.value })}
-              placeholder="Ej: Construcción en altura"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              value={nuevoMiembro.email}
-              onChange={(e) => setNuevoMiembro({ ...nuevoMiembro, email: e.target.value })}
-              placeholder="correo@ejemplo.com"
-            />
-          </div>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label>Teléfono</label>
-            <input
-              type="text"
-              value={nuevoMiembro.telefono}
-              onChange={(e) => setNuevoMiembro({ ...nuevoMiembro, telefono: e.target.value })}
-              placeholder="+54 11 1234-5678"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>LinkedIn</label>
-            <input
-              type="text"
-              value={nuevoMiembro.linkedin}
-              onChange={(e) => setNuevoMiembro({ ...nuevoMiembro, linkedin: e.target.value })}
-              placeholder="https://linkedin.com/in/..."
             />
           </div>
         </div>
 
         <div className="form-group">
-          <label>URL de Foto</label>
-          <input
-            type="text"
-            value={nuevoMiembro.foto}
-            onChange={(e) => setNuevoMiembro({ ...nuevoMiembro, foto: e.target.value })}
-            placeholder="https://ejemplo.com/foto.jpg"
-          />
+          <label>Foto</label>
           {nuevoMiembro.foto && (
-            <div className="image-preview">
-              <img src={nuevoMiembro.foto} alt="Preview" />
+            <div className="image-preview" style={{ marginBottom: '8px' }}>
+              <img src={nuevoMiembro.foto} alt="Preview" style={{ maxWidth: '150px', borderRadius: '8px' }} />
             </div>
           )}
-        </div>
-
-        <div className="form-group">
-          <label>Descripción / Bio</label>
-          <textarea
-            value={nuevoMiembro.descripcion}
-            onChange={(e) => setNuevoMiembro({ ...nuevoMiembro, descripcion: e.target.value })}
-            placeholder="Breve descripción del miembro del equipo..."
-            rows="4"
+          <button
+            type="button"
+            className="btn-upload-hero"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={subiendoFoto}
+            style={{ marginBottom: '4px' }}
+          >
+            {subiendoFoto ? 'Subiendo foto...' : nuevoMiembro.foto ? 'Cambiar foto' : 'Subir foto'}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFotoUpload}
+            style={{ display: 'none' }}
           />
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label>Orden</label>
-            <input
-              type="number"
-              value={nuevoMiembro.orden}
-              onChange={(e) => setNuevoMiembro({ ...nuevoMiembro, orden: parseInt(e.target.value) })}
-              min="0"
-            />
-            <small>Número menor aparece primero</small>
-          </div>
-
-          <div className="form-group checkboxes">
-            <label>
-              <input
-                type="checkbox"
-                checked={nuevoMiembro.destacado}
-                onChange={(e) => setNuevoMiembro({ ...nuevoMiembro, destacado: e.target.checked })}
-              />
-              Miembro Destacado
-            </label>
-
-            <label>
-              <input
-                type="checkbox"
-                checked={nuevoMiembro.visible}
-                onChange={(e) => setNuevoMiembro({ ...nuevoMiembro, visible: e.target.checked })}
-              />
-              Visible en el sitio
-            </label>
-          </div>
         </div>
 
         <div className="form-actions">
@@ -311,7 +219,7 @@ function AdminEquipo() {
       </form>
 
       <div className="obras-list">
-        <h3>👥 Equipo ({equipo.length})</h3>
+        <h3>Equipo ({equipo.length})</h3>
         {equipo.length === 0 ? (
           <p className="empty-state">No hay miembros registrados aún</p>
         ) : (
@@ -319,48 +227,47 @@ function AdminEquipo() {
             <table>
               <thead>
                 <tr>
+                  <th>Orden</th>
                   <th>Foto</th>
                   <th>Nombre</th>
                   <th>Cargo</th>
-                  <th>Email</th>
-                  <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {equipo.map(miembro => (
+                {equipo.map((miembro, index) => (
                   <tr key={miembro.id} className={!miembro.visible ? 'oculta' : ''}>
+                    <td className="actions" style={{ whiteSpace: 'nowrap' }}>
+                      <button
+                        className="btn-icon"
+                        onClick={() => handleMoverArriba(index)}
+                        disabled={index === 0}
+                        title="Subir"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        className="btn-icon"
+                        onClick={() => handleMoverAbajo(index)}
+                        disabled={index === equipo.length - 1}
+                        title="Bajar"
+                      >
+                        ▼
+                      </button>
+                    </td>
                     <td>
                       {miembro.foto && (
                         <img src={miembro.foto} alt={miembro.nombre} className="thumbnail" />
                       )}
                     </td>
-                    <td>
-                      <strong>{miembro.nombre}</strong>
-                      {miembro.destacado && <span className="badge-destacada">⭐</span>}
-                    </td>
+                    <td><strong>{miembro.nombre}</strong></td>
                     <td>{miembro.cargo}</td>
-                    <td>{miembro.email || '-'}</td>
-                    <td>
-                      <button
-                        className={`btn-toggle ${miembro.visible ? 'visible' : 'oculta'}`}
-                        onClick={() => toggleVisibilidad(miembro)}
-                      >
-                        {miembro.visible ? '👁️ Visible' : '🚫 Oculto'}
-                      </button>
-                    </td>
                     <td className="actions">
-                      <button
-                        className="btn-icon btn-edit"
-                        onClick={() => handleEditar(miembro)}
-                      >
-                        ✏️
+                      <button className="btn-icon btn-edit" onClick={() => handleEditar(miembro)}>
+                        Editar
                       </button>
-                      <button
-                        className="btn-icon btn-delete"
-                        onClick={() => handleEliminar(miembro.id)}
-                      >
-                        🗑️
+                      <button className="btn-icon btn-delete" onClick={() => handleEliminar(miembro)}>
+                        Eliminar
                       </button>
                     </td>
                   </tr>

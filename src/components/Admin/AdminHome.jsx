@@ -1,25 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getHomeConfig, actualizarHomeConfig, loadConfig, cargarDatosDemo } from '../../data/homeData';
-import { storage } from '../../firebase/config';
+import { getHomeConfig, updateHomeConfig, uploadConfigImage } from '../../api/config';
 import { useToast } from '../Toast';
+import { useUnsavedWarning } from '../../hooks/useUnsavedWarning';
 import './AdminHome.css';
 
 function AdminHome() {
   const toast = useToast();
-  const [config, setConfig] = useState(getHomeConfig());
+  const [config, setConfig] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [cargando, setCargando] = useState(true);
-  const [cargandoDemo, setCargandoDemo] = useState(false);
-  const [subiendoImagen, setSubiendoImagen] = useState(false);
-  const fileInputRef = useRef(null);
+  const [subiendoVideo, setSubiendoVideo] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const videoInputRef = useRef(null);
+  const markSaved = useUnsavedWarning(hasChanges);
 
   useEffect(() => {
     const cargarConfig = async () => {
       setCargando(true);
-      const configCargada = await loadConfig();
-      setConfig(configCargada);
-      setCargando(false);
+      try {
+        const data = await getHomeConfig();
+        setConfig(data);
+      } catch (err) {
+        console.error('Error cargando configuración:', err);
+        toast.error('Error al cargar la configuración.');
+      } finally {
+        setCargando(false);
+      }
     };
     cargarConfig();
   }, []);
@@ -32,6 +38,7 @@ function AdminHome() {
         [campo]: valor
       }
     }));
+    setHasChanges(true);
   };
 
   const handleMetricaChange = (metrica, campo, valor) => {
@@ -41,36 +48,63 @@ function AdminHome() {
         ...prev.metricas,
         [metrica]: {
           ...prev.metricas[metrica],
-          [campo]: campo === 'valor' ? Number(valor) : valor
+          [campo]: campo === 'valor' ? (isNaN(Number(valor)) ? valor : Number(valor)) : valor
         }
       }
     }));
+    setHasChanges(true);
   };
 
-  const handleHeroImageUpload = async (e) => {
+  const handleHeroVideoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setSubiendoImagen(true);
+    setSubiendoVideo(true);
     try {
-      const storageRef = ref(storage, 'hero/background');
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      setConfig(prev => ({ ...prev, hero: { ...prev.hero, heroImageUrl: url } }));
-      toast.success('Imagen subida. Guardá los cambios para aplicarla.');
+      const result = await uploadConfigImage(file, 'video');
+      setConfig(prev => ({ ...prev, hero: { ...prev.hero, heroVideoUrl: result.url } }));
+      setHasChanges(true);
+      toast.success('Video subido. Guardá los cambios para aplicar.');
     } catch (err) {
-      console.error('Error subiendo imagen:', err);
-      toast.error('Error al subir la imagen. Intentá de nuevo.');
+      console.error('Error subiendo video:', err);
+      toast.error('Error al subir el video.');
     } finally {
-      setSubiendoImagen(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      setSubiendoVideo(false);
+      if (videoInputRef.current) videoInputRef.current.value = '';
     }
   };
+
+  const handleRemoveHeroVideo = () => {
+    if (!window.confirm('¿Eliminar el video del hero?')) return;
+    setConfig(prev => ({ ...prev, hero: { ...prev.hero, heroVideoUrl: '' } }));
+    setHasChanges(true);
+    toast.success('Video eliminado. Guardá los cambios.');
+  };
+
+  const handleHeroFieldChange = (campo, valor) => {
+    setConfig(prev => ({
+      ...prev,
+      hero: { ...prev.hero, [campo]: valor }
+    }));
+    setHasChanges(true);
+  };
+
+  const POSICIONES = [
+    { value: 'centro',          label: 'Centro' },
+    { value: 'centro-arriba',   label: 'Centro Arriba' },
+    { value: 'centro-abajo',    label: 'Centro Abajo' },
+    { value: 'izquierda',       label: 'Izquierda' },
+    { value: 'izquierda-abajo', label: 'Izquierda Abajo' },
+    { value: 'derecha',         label: 'Derecha' },
+    { value: 'derecha-abajo',   label: 'Derecha Abajo' },
+  ];
 
   const handleGuardar = async () => {
     setGuardando(true);
     try {
-      await actualizarHomeConfig(config);
-      toast.success('Cambios guardados en Firebase.');
+      await updateHomeConfig(config);
+      setHasChanges(false);
+      markSaved();
+      toast.success('Cambios guardados en el servidor.');
     } catch (error) {
       toast.error('Error al guardar: ' + error.message);
     } finally {
@@ -78,26 +112,21 @@ function AdminHome() {
     }
   };
 
-  const handleCargarDemo = async () => {
-    if (window.confirm('¿Cargar datos demo? Esto sobrescribirá la configuración actual.')) {
-      setCargandoDemo(true);
-      try {
-        const datosDemo = await cargarDatosDemo();
-        setConfig(datosDemo);
-        toast.success('Datos demo cargados exitosamente.');
-      } catch (error) {
-        toast.error('Error al cargar datos demo: ' + error.message);
-      } finally {
-        setCargandoDemo(false);
-      }
-    }
-  };
-
   if (cargando) {
     return (
       <div className="admin-home">
         <div style={{ textAlign: 'center', padding: '3rem' }}>
-          <p>Cargando configuración desde Firebase...</p>
+          <p>Cargando configuración...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!config) {
+    return (
+      <div className="admin-home">
+        <div style={{ textAlign: 'center', padding: '3rem' }}>
+          <p>No se pudo cargar la configuración.</p>
         </div>
       </div>
     );
@@ -112,13 +141,6 @@ function AdminHome() {
         </div>
         <div className="header-actions">
           <button
-            className="btn-demo"
-            onClick={handleCargarDemo}
-            disabled={cargandoDemo}
-          >
-            {cargandoDemo ? 'Cargando...' : 'Cargar Datos Demo'}
-          </button>
-          <button
             className="btn-guardar"
             onClick={handleGuardar}
             disabled={guardando}
@@ -130,96 +152,146 @@ function AdminHome() {
 
       {/* Hero Section */}
       <section className="admin-section">
-        <h3>Hero Principal</h3>
+        <h3>Hero Principal — Video de Fondo</h3>
 
-        {/* Imagen de Fondo */}
+        {/* Video */}
         <div className="form-group">
-          <label>Imagen de Fondo del Hero</label>
-          <div className="hero-image-upload">
-            {config.hero?.heroImageUrl ? (
-              <div className="hero-image-preview">
-                <img src={config.hero.heroImageUrl} alt="Vista previa del hero" />
-                <button
-                  type="button"
-                  className="btn-change-image"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={subiendoImagen}
-                >
-                  {subiendoImagen ? 'Subiendo...' : 'Cambiar imagen'}
-                </button>
-              </div>
+          <label>Video del Hero</label>
+          {config.hero?.heroVideoUrl && (
+            <div className="hero-video-preview" style={{ marginBottom: '12px' }}>
+              <video src={config.hero.heroVideoUrl} muted loop autoPlay playsInline style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px' }} />
+              <button type="button" className="btn-remove-image" onClick={handleRemoveHeroVideo} title="Eliminar video" style={{ marginLeft: '8px' }}>✕ Quitar video</button>
+            </div>
+          )}
+          <button
+            type="button"
+            className="btn-upload-hero"
+            onClick={() => videoInputRef.current?.click()}
+            disabled={subiendoVideo}
+          >
+            {subiendoVideo ? (
+              <>
+                <span className="upload-spinner"></span>
+                Subiendo video...
+              </>
             ) : (
-              <button
-                type="button"
-                className="btn-upload-hero"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={subiendoImagen}
-              >
-                {subiendoImagen ? (
-                  <>
-                    <span className="upload-spinner"></span>
-                    Subiendo imagen...
-                  </>
-                ) : (
-                  <>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="16 16 12 12 8 16"/>
-                      <line x1="12" y1="12" x2="12" y2="21"/>
-                      <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-                    </svg>
-                    Subir imagen de fondo
-                  </>
-                )}
-              </button>
+              <>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="16 16 12 12 8 16"/>
+                  <line x1="12" y1="12" x2="12" y2="21"/>
+                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                </svg>
+                {config.hero?.heroVideoUrl ? 'Cambiar video' : 'Subir video'}
+              </>
             )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleHeroImageUpload}
-              style={{ display: 'none' }}
-            />
+          </button>
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/*"
+            onChange={handleHeroVideoUpload}
+            style={{ display: 'none' }}
+          />
+          <small>MP4 recomendado. Se reproducirá en loop sin sonido.</small>
+        </div>
+
+        {/* Texto del Hero */}
+        <div className="form-group" style={{ marginTop: '1.5rem' }}>
+          <label style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem', display: 'block' }}>Texto del Hero</label>
+          <div className="hero-slide-fields">
+            <div className="hero-slide-field-row">
+              <div className="form-group" style={{ flex: 1 }}>
+                <label>Título</label>
+                <input
+                  type="text"
+                  value={config.hero?.titulo || ''}
+                  onChange={(e) => handleHeroFieldChange('titulo', e.target.value)}
+                  placeholder="Título principal"
+                />
+              </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label>Texto destacado</label>
+                <input
+                  type="text"
+                  value={config.hero?.tituloDestacado || ''}
+                  onChange={(e) => handleHeroFieldChange('tituloDestacado', e.target.value)}
+                  placeholder="Texto resaltado"
+                />
+              </div>
+            </div>
+            <div className="hero-slide-field-row">
+              <div className="form-group" style={{ flex: 2 }}>
+                <label>Subtítulo</label>
+                <input
+                  type="text"
+                  value={config.hero?.subtitulo || ''}
+                  onChange={(e) => handleHeroFieldChange('subtitulo', e.target.value)}
+                  placeholder="Descripción breve"
+                />
+              </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label>Posición del texto</label>
+                <select
+                  value={config.hero?.posicion || 'centro'}
+                  onChange={(e) => handleHeroFieldChange('posicion', e.target.value)}
+                >
+                  {POSICIONES.map(pos => (
+                    <option key={pos.value} value={pos.value}>{pos.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="hero-slide-field-row">
+              <div className="form-group" style={{ flex: 1 }}>
+                <label>Color del texto</label>
+                <div className="color-picker-row">
+                  <input
+                    type="color"
+                    value={config.hero?.colorTexto || '#ffffff'}
+                    onChange={(e) => handleHeroFieldChange('colorTexto', e.target.value)}
+                    className="color-input"
+                  />
+                  <input
+                    type="text"
+                    value={config.hero?.colorTexto || '#ffffff'}
+                    onChange={(e) => handleHeroFieldChange('colorTexto', e.target.value)}
+                    placeholder="#ffffff"
+                    className="color-text-input"
+                  />
+                </div>
+              </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label>Color del destacado</label>
+                <div className="color-picker-row">
+                  <input
+                    type="color"
+                    value={config.hero?.colorDestacado || '#e8b84b'}
+                    onChange={(e) => handleHeroFieldChange('colorDestacado', e.target.value)}
+                    className="color-input"
+                  />
+                  <input
+                    type="text"
+                    value={config.hero?.colorDestacado || '#e8b84b'}
+                    onChange={(e) => handleHeroFieldChange('colorDestacado', e.target.value)}
+                    placeholder="#e8b84b"
+                    className="color-text-input"
+                  />
+                </div>
+              </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label>Tamaño del título</label>
+                <select
+                  value={config.hero?.fontSize || 'normal'}
+                  onChange={(e) => handleHeroFieldChange('fontSize', e.target.value)}
+                >
+                  <option value="chico">Chico</option>
+                  <option value="normal">Normal</option>
+                  <option value="grande">Grande</option>
+                  <option value="muy-grande">Muy Grande</option>
+                </select>
+              </div>
+            </div>
           </div>
-          <small>JPG o PNG. Recomendado: 1920×1080px o mayor. Se reemplaza la imagen anterior.</small>
-        </div>
-
-        <div className="form-group">
-          <label>Título Principal</label>
-          <input
-            type="text"
-            value={config.hero.titulo}
-            onChange={(e) => handleInputChange('hero', 'titulo', e.target.value)}
-            placeholder="Construimos"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Título Destacado (dorado)</label>
-          <input
-            type="text"
-            value={config.hero.tituloDestacado}
-            onChange={(e) => handleInputChange('hero', 'tituloDestacado', e.target.value)}
-            placeholder="Espacios"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Subtítulo</label>
-          <input
-            type="text"
-            value={config.hero.subtitulo}
-            onChange={(e) => handleInputChange('hero', 'subtitulo', e.target.value)}
-            placeholder="Excelencia en construcción"
-          />
-        </div>
-
-        {/* Preview del Hero */}
-        <div className="preview-hero">
-          <div className="preview-title">
-            {config.hero.titulo}<br />
-            <span className="preview-highlight">{config.hero.tituloDestacado}</span>
-          </div>
-          <div className="preview-subtitle">{config.hero.subtitulo}</div>
         </div>
       </section>
 
@@ -234,16 +306,25 @@ function AdminHome() {
             <div className="form-group">
               <label>Valor</label>
               <input
-                type="number"
-                value={config.metricas.anos.valor}
+                type="text"
+                value={config.metricas?.anos?.valor ?? ''}
                 onChange={(e) => handleMetricaChange('anos', 'valor', e.target.value)}
               />
             </div>
             <div className="form-group">
-              <label>Etiqueta</label>
+              <label>Unidad (se muestra grande al lado)</label>
               <input
                 type="text"
-                value={config.metricas.anos.label}
+                value={config.metricas?.anos?.unidad || ''}
+                onChange={(e) => handleMetricaChange('anos', 'unidad', e.target.value)}
+                placeholder="Ej: m², años"
+              />
+            </div>
+            <div className="form-group">
+              <label>Etiqueta (debajo)</label>
+              <input
+                type="text"
+                value={config.metricas?.anos?.label ?? ''}
                 onChange={(e) => handleMetricaChange('anos', 'label', e.target.value)}
               />
             </div>
@@ -257,39 +338,57 @@ function AdminHome() {
             <div className="form-group">
               <label>Valor</label>
               <input
-                type="number"
-                value={config.metricas.metrosConstructidos.valor}
+                type="text"
+                value={config.metricas?.metrosConstructidos?.valor ?? ''}
                 onChange={(e) => handleMetricaChange('metrosConstructidos', 'valor', e.target.value)}
               />
             </div>
             <div className="form-group">
-              <label>Etiqueta</label>
+              <label>Unidad (se muestra grande al lado)</label>
               <input
                 type="text"
-                value={config.metricas.metrosConstructidos.label}
+                value={config.metricas?.metrosConstructidos?.unidad || ''}
+                onChange={(e) => handleMetricaChange('metrosConstructidos', 'unidad', e.target.value)}
+                placeholder="Ej: m², años"
+              />
+            </div>
+            <div className="form-group">
+              <label>Etiqueta (debajo)</label>
+              <input
+                type="text"
+                value={config.metricas?.metrosConstructidos?.label ?? ''}
                 onChange={(e) => handleMetricaChange('metrosConstructidos', 'label', e.target.value)}
               />
             </div>
           </div>
         </div>
 
-        {/* Proyectos */}
+        {/* Obras */}
         <div className="metrica-group">
-          <h4>Proyectos Realizados</h4>
+          <h4>Obras Realizadas</h4>
           <div className="form-row">
             <div className="form-group">
               <label>Valor</label>
               <input
-                type="number"
-                value={config.metricas.proyectos.valor}
+                type="text"
+                value={config.metricas?.proyectos?.valor ?? ''}
                 onChange={(e) => handleMetricaChange('proyectos', 'valor', e.target.value)}
               />
             </div>
             <div className="form-group">
-              <label>Etiqueta</label>
+              <label>Unidad (se muestra grande al lado)</label>
               <input
                 type="text"
-                value={config.metricas.proyectos.label}
+                value={config.metricas?.proyectos?.unidad || ''}
+                onChange={(e) => handleMetricaChange('proyectos', 'unidad', e.target.value)}
+                placeholder="Ej: m², años"
+              />
+            </div>
+            <div className="form-group">
+              <label>Etiqueta (debajo)</label>
+              <input
+                type="text"
+                value={config.metricas?.proyectos?.label ?? ''}
                 onChange={(e) => handleMetricaChange('proyectos', 'label', e.target.value)}
               />
             </div>
@@ -299,16 +398,16 @@ function AdminHome() {
         {/* Preview de Métricas */}
         <div className="preview-metricas">
           <div className="preview-metric">
-            <div className="preview-metric-value">+{config.metricas.anos.valor}</div>
-            <div className="preview-metric-label">{config.metricas.anos.label}</div>
+            <div className="preview-metric-value">+{config.metricas?.anos?.valor ?? ''}{config.metricas?.anos?.unidad ? ` ${config.metricas.anos.unidad}` : ''}</div>
+            <div className="preview-metric-label">{config.metricas?.anos?.label ?? ''}</div>
           </div>
           <div className="preview-metric">
-            <div className="preview-metric-value">+{config.metricas.metrosConstructidos.valor.toLocaleString()}</div>
-            <div className="preview-metric-label">{config.metricas.metrosConstructidos.label}</div>
+            <div className="preview-metric-value">+{typeof config.metricas?.metrosConstructidos?.valor === 'number' ? config.metricas.metrosConstructidos.valor.toLocaleString() : (config.metricas?.metrosConstructidos?.valor ?? '')}{config.metricas?.metrosConstructidos?.unidad ? ` ${config.metricas.metrosConstructidos.unidad}` : ''}</div>
+            <div className="preview-metric-label">{config.metricas?.metrosConstructidos?.label ?? ''}</div>
           </div>
           <div className="preview-metric">
-            <div className="preview-metric-value">+{config.metricas.proyectos.valor}</div>
-            <div className="preview-metric-label">{config.metricas.proyectos.label}</div>
+            <div className="preview-metric-value">+{config.metricas?.proyectos?.valor ?? ''}{config.metricas?.proyectos?.unidad ? ` ${config.metricas.proyectos.unidad}` : ''}</div>
+            <div className="preview-metric-label">{config.metricas?.proyectos?.label ?? ''}</div>
           </div>
         </div>
       </section>
@@ -319,10 +418,10 @@ function AdminHome() {
           onClick={handleGuardar}
           disabled={guardando}
         >
-          {guardando ? 'Guardando en Firebase...' : 'Guardar Todos los Cambios'}
+          {guardando ? 'Guardando...' : 'Guardar Todos los Cambios'}
         </button>
         <p className="info-guardar">
-          Los cambios se guardan en Firebase y se aplican instantáneamente
+          Los cambios se guardan en el servidor y se aplican instantáneamente
         </p>
       </div>
     </div>

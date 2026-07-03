@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
-import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db, COLLECTIONS } from '../../firebase/config';
+import { useState, useEffect, useRef } from 'react';
+import { getObras, createObra, updateObra, deleteObra, uploadObraImage } from '../../api/obras';
 import { useToast } from '../Toast';
 import './Admin.css';
 
@@ -10,22 +9,26 @@ function AdminObras() {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [editando, setEditando] = useState(null);
-  
-  const [nuevaObra, setNuevaObra] = useState({
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const defaultObra = {
     nombre: '',
     categoria: 'Retail / Comercial',
     ubicacion: '',
-    año: new Date().getFullYear(),
+    anno: new Date().getFullYear(),
     descripcion: '',
-    imagen: '',
-    metrosCuadrados: '',
+    imagenes: [],
+    imagen_portada: 0,
+    metros_cuadrados: '',
     cliente: '',
     destacada: false,
     visible: true,
     orden: 0
-  });
+  };
 
-  const categorias = ['Retail / Comercial', 'Oficinas', 'Industrial', 'Bancos'];
+  const [nuevaObra, setNuevaObra] = useState(defaultObra);
+  const categorias = ['Retail / Comercial', 'Oficinas', 'Industrial', 'Bancos', 'Proyecto'];
 
   useEffect(() => {
     cargarObras();
@@ -34,16 +37,9 @@ function AdminObras() {
   const cargarObras = async () => {
     try {
       setCargando(true);
-      const obrasRef = collection(db, COLLECTIONS.OBRAS);
-      const snapshot = await getDocs(obrasRef);
-      
-      const obrasData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
-      obrasData.sort((a, b) => (a.orden || 0) - (b.orden || 0));
-      setObras(obrasData);
+      const data = await getObras();
+      data.sort((a, b) => (a.orden || 0) - (b.orden || 0));
+      setObras(data);
     } catch (error) {
       console.error('Error al cargar obras:', error);
       toast.error('Error al cargar obras');
@@ -52,51 +48,103 @@ function AdminObras() {
     }
   };
 
+  // Subir imágenes al servidor
+  const handleImageUpload = async (files) => {
+    if (!files || files.length === 0) return;
+
+    const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
+    for (const file of files) {
+      if (!tiposPermitidos.includes(file.type)) {
+        toast.error(`Formato no soportado: ${file.name}`);
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} supera los 5MB`);
+        return;
+      }
+    }
+
+    setSubiendoImagen(true);
+    try {
+      const nuevasUrls = [];
+      for (const file of files) {
+        const result = await uploadObraImage(file);
+        nuevasUrls.push(result.url);
+      }
+      setNuevaObra(prev => ({
+        ...prev,
+        imagenes: [...(prev.imagenes || []), ...nuevasUrls],
+        imagen_portada: prev.imagen_portada || 0
+      }));
+      toast.success(`${files.length} imagen(es) subida(s)`);
+    } catch (error) {
+      console.error('Error subiendo:', error);
+      toast.error('Error al subir imagenes');
+    } finally {
+      setSubiendoImagen(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveImage = (index) => {
+    setNuevaObra(prev => {
+      const imagenes = prev.imagenes.filter((_, i) => i !== index);
+      let portada = prev.imagen_portada || 0;
+      if (index === portada) portada = 0;
+      else if (index < portada) portada--;
+      if (portada >= imagenes.length) portada = Math.max(0, imagenes.length - 1);
+      return { ...prev, imagenes, imagen_portada: portada };
+    });
+  };
+
+  const handleSetPortada = (index) => {
+    setNuevaObra(prev => ({ ...prev, imagen_portada: index }));
+  };
+
+  const getImagenes = (obra) => {
+    return obra.imagenes || [];
+  };
+
+  const getPortadaUrl = (obra) => {
+    const imgs = getImagenes(obra);
+    if (imgs.length === 0) return '';
+    const idx = obra.imagen_portada || 0;
+    return imgs[idx] || imgs[0];
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!nuevaObra.nombre || !nuevaObra.categoria) {
-      toast.warning('El nombre y categoría son obligatorios');
+      toast.warning('El nombre y categoria son obligatorios');
       return;
     }
 
     setGuardando(true);
-
     try {
       const obraData = {
-        ...nuevaObra,
-        metrosCuadrados: nuevaObra.metrosCuadrados ? parseFloat(nuevaObra.metrosCuadrados) : null,
-        año: parseInt(nuevaObra.año)
+        nombre: nuevaObra.nombre,
+        categoria: nuevaObra.categoria,
+        ubicacion: nuevaObra.ubicacion,
+        anno: parseInt(nuevaObra.anno),
+        descripcion: nuevaObra.descripcion,
+        imagenes: nuevaObra.imagenes || [],
+        imagen_portada: nuevaObra.imagen_portada || 0,
+        metros_cuadrados: nuevaObra.metros_cuadrados ? parseFloat(nuevaObra.metros_cuadrados) : null,
+        cliente: nuevaObra.cliente,
+        destacada: nuevaObra.destacada,
+        visible: nuevaObra.visible,
+        orden: nuevaObra.orden
       };
 
       if (editando) {
-        const obraRef = doc(db, COLLECTIONS.OBRAS, editando);
-        await updateDoc(obraRef, {
-          ...obraData,
-          fechaModificacion: serverTimestamp()
-        });
+        await updateObra(editando, obraData);
         toast.success('Obra actualizada exitosamente');
       } else {
-        await addDoc(collection(db, COLLECTIONS.OBRAS), {
-          ...obraData,
-          fechaCreacion: serverTimestamp()
-        });
+        await createObra(obraData);
         toast.success('Obra creada exitosamente');
       }
 
-      setNuevaObra({
-        nombre: '',
-        categoria: 'Retail / Comercial',
-        ubicacion: '',
-        año: new Date().getFullYear(),
-        descripcion: '',
-        imagen: '',
-        metrosCuadrados: '',
-        cliente: '',
-        destacada: false,
-        visible: true,
-        orden: 0
-      });
+      setNuevaObra(defaultObra);
       setEditando(null);
       cargarObras();
     } catch (error) {
@@ -108,14 +156,16 @@ function AdminObras() {
   };
 
   const handleEditar = (obra) => {
+    const imagenes = getImagenes(obra);
     setNuevaObra({
       nombre: obra.nombre || '',
       categoria: obra.categoria || 'Retail / Comercial',
       ubicacion: obra.ubicacion || '',
-      año: obra.año || new Date().getFullYear(),
+      anno: obra.anno || new Date().getFullYear(),
       descripcion: obra.descripcion || '',
-      imagen: obra.imagen || '',
-      metrosCuadrados: obra.metrosCuadrados || '',
+      imagenes,
+      imagen_portada: obra.imagen_portada || 0,
+      metros_cuadrados: obra.metros_cuadrados || '',
       cliente: obra.cliente || '',
       destacada: obra.destacada || false,
       visible: obra.visible !== undefined ? obra.visible : true,
@@ -126,10 +176,9 @@ function AdminObras() {
   };
 
   const handleEliminar = async (id) => {
-    if (!confirm('¿Estás seguro de eliminar esta obra?')) return;
-
+    if (!confirm('¿Estas seguro de eliminar esta obra?')) return;
     try {
-      await deleteDoc(doc(db, COLLECTIONS.OBRAS, id));
+      await deleteObra(id);
       toast.success('Obra eliminada');
       cargarObras();
     } catch (error) {
@@ -140,50 +189,28 @@ function AdminObras() {
 
   const toggleVisibilidad = async (obra) => {
     try {
-      const obraRef = doc(db, COLLECTIONS.OBRAS, obra.id);
       const nuevoEstado = !obra.visible;
-      await updateDoc(obraRef, {
-        visible: nuevoEstado,
-        fechaModificacion: serverTimestamp()
-      });
+      await updateObra(obra.id, { visible: nuevoEstado });
       toast.success(nuevoEstado ? 'Obra visible en el sitio' : 'Obra oculta del sitio');
       cargarObras();
     } catch (error) {
-      console.error('Error al cambiar visibilidad:', error);
       toast.error('Error al cambiar visibilidad');
     }
   };
 
   const toggleDestacada = async (obra) => {
     try {
-      const obraRef = doc(db, COLLECTIONS.OBRAS, obra.id);
       const nuevoEstado = !obra.destacada;
-      await updateDoc(obraRef, {
-        destacada: nuevoEstado,
-        fechaModificacion: serverTimestamp()
-      });
+      await updateObra(obra.id, { destacada: nuevoEstado });
       toast.success(nuevoEstado ? 'Obra destacada' : 'Obra no destacada');
       cargarObras();
     } catch (error) {
-      console.error('Error al cambiar destacada:', error);
       toast.error('Error al cambiar destacada');
     }
   };
 
   const handleCancelar = () => {
-    setNuevaObra({
-      nombre: '',
-      categoria: 'Retail / Comercial',
-      ubicacion: '',
-      año: new Date().getFullYear(),
-      descripcion: '',
-      imagen: '',
-      metrosCuadrados: '',
-      cliente: '',
-      destacada: false,
-      visible: true,
-      orden: 0
-    });
+    setNuevaObra(defaultObra);
     setEditando(null);
   };
 
@@ -193,8 +220,8 @@ function AdminObras() {
 
   return (
     <div className="admin-section">
-      <h2>{editando ? '✏️ Editar Obra' : '➕ Nueva Obra'}</h2>
-      
+      <h2>{editando ? 'Editar Obra' : 'Nueva Obra'}</h2>
+
       <form onSubmit={handleSubmit} className="admin-form">
         <div className="form-row">
           <div className="form-group">
@@ -207,9 +234,8 @@ function AdminObras() {
               required
             />
           </div>
-
           <div className="form-group">
-            <label>Categoría *</label>
+            <label>Categoria *</label>
             <select
               value={nuevaObra.categoria}
               onChange={(e) => setNuevaObra({ ...nuevaObra, categoria: e.target.value })}
@@ -224,7 +250,7 @@ function AdminObras() {
 
         <div className="form-row">
           <div className="form-group">
-            <label>Ubicación</label>
+            <label>Ubicacion</label>
             <input
               type="text"
               value={nuevaObra.ubicacion}
@@ -232,13 +258,12 @@ function AdminObras() {
               placeholder="Ej: Buenos Aires, Argentina"
             />
           </div>
-
           <div className="form-group">
-            <label>Año</label>
+            <label>Ano</label>
             <input
               type="number"
-              value={nuevaObra.año}
-              onChange={(e) => setNuevaObra({ ...nuevaObra, año: e.target.value })}
+              value={nuevaObra.anno}
+              onChange={(e) => setNuevaObra({ ...nuevaObra, anno: e.target.value })}
               min="1900"
               max={new Date().getFullYear() + 5}
             />
@@ -250,12 +275,11 @@ function AdminObras() {
             <label>Metros Cuadrados</label>
             <input
               type="number"
-              value={nuevaObra.metrosCuadrados}
-              onChange={(e) => setNuevaObra({ ...nuevaObra, metrosCuadrados: e.target.value })}
+              value={nuevaObra.metros_cuadrados}
+              onChange={(e) => setNuevaObra({ ...nuevaObra, metros_cuadrados: e.target.value })}
               placeholder="Ej: 450"
             />
           </div>
-
           <div className="form-group">
             <label>Cliente</label>
             <input
@@ -267,27 +291,61 @@ function AdminObras() {
           </div>
         </div>
 
+        {/* Multi-imagen */}
         <div className="form-group">
-          <label>URL de Imagen</label>
-          <input
-            type="text"
-            value={nuevaObra.imagen}
-            onChange={(e) => setNuevaObra({ ...nuevaObra, imagen: e.target.value })}
-            placeholder="https://ejemplo.com/imagen.jpg"
-          />
-          {nuevaObra.imagen && (
-            <div className="image-preview">
-              <img src={nuevaObra.imagen} alt="Preview" />
+          <label>Imagenes ({(nuevaObra.imagenes || []).length}) — Clic en una imagen para elegirla como portada</label>
+
+          {(nuevaObra.imagenes || []).length > 0 && (
+            <div className="imagenes-grid">
+              {nuevaObra.imagenes.map((url, idx) => (
+                <div
+                  key={idx}
+                  className={`imagen-thumb${idx === (nuevaObra.imagen_portada || 0) ? ' imagen-portada' : ''}`}
+                  onClick={() => handleSetPortada(idx)}
+                  title={idx === (nuevaObra.imagen_portada || 0) ? 'Imagen de portada' : 'Clic para usar como portada'}
+                >
+                  <img src={url} alt={`Imagen ${idx + 1}`} />
+                  {idx === (nuevaObra.imagen_portada || 0) && <span className="portada-badge">Portada</span>}
+                  <button
+                    type="button"
+                    className="btn-remove-thumb"
+                    onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
+                    title="Eliminar imagen"
+                  >
+                    x
+                  </button>
+                </div>
+              ))}
             </div>
           )}
+
+          <div style={{ marginTop: '8px' }}>
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
+              multiple
+              onChange={(e) => handleImageUpload(Array.from(e.target.files))}
+              ref={fileInputRef}
+              id="obras-file-upload"
+              style={{ display: 'none' }}
+            />
+            <label
+              htmlFor="obras-file-upload"
+              className="btn-subir-imagen"
+              style={{ cursor: subiendoImagen ? 'wait' : 'pointer', opacity: subiendoImagen ? 0.6 : 1 }}
+            >
+              {subiendoImagen ? 'Subiendo...' : 'Subir imagenes'}
+            </label>
+          </div>
+          <small>JPG, PNG, WebP, AVIF. Max 5MB por imagen. Podes subir varias a la vez.</small>
         </div>
 
         <div className="form-group">
-          <label>Descripción</label>
+          <label>Descripcion</label>
           <textarea
             value={nuevaObra.descripcion}
             onChange={(e) => setNuevaObra({ ...nuevaObra, descripcion: e.target.value })}
-            placeholder="Descripción detallada de la obra..."
+            placeholder="Descripcion detallada de la obra..."
             rows="4"
           />
         </div>
@@ -301,7 +359,7 @@ function AdminObras() {
               onChange={(e) => setNuevaObra({ ...nuevaObra, orden: parseInt(e.target.value) })}
               min="0"
             />
-            <small>Número menor aparece primero</small>
+            <small>Numero menor aparece primero</small>
           </div>
 
           <div className="form-group checkboxes">
@@ -313,7 +371,6 @@ function AdminObras() {
               />
               Obra Destacada
             </label>
-
             <label>
               <input
                 type="checkbox"
@@ -338,9 +395,9 @@ function AdminObras() {
       </form>
 
       <div className="obras-list">
-        <h3>📋 Obras Registradas ({obras.length})</h3>
+        <h3>Obras Registradas ({obras.length})</h3>
         {obras.length === 0 ? (
-          <p className="empty-state">No hay obras registradas aún</p>
+          <p className="empty-state">No hay obras registradas aun</p>
         ) : (
           <div className="table-container">
             <table>
@@ -348,9 +405,9 @@ function AdminObras() {
                 <tr>
                   <th>Imagen</th>
                   <th>Nombre</th>
-                  <th>Categoría</th>
-                  <th>Ubicación</th>
-                  <th>Año</th>
+                  <th>Categoria</th>
+                  <th>Ubicacion</th>
+                  <th>Ano</th>
                   <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
@@ -359,44 +416,39 @@ function AdminObras() {
                 {obras.map(obra => (
                   <tr key={obra.id} className={!obra.visible ? 'oculta' : ''}>
                     <td>
-                      {obra.imagen && (
-                        <img src={obra.imagen} alt={obra.nombre} className="thumbnail" />
+                      {getPortadaUrl(obra) && (
+                        <img src={getPortadaUrl(obra)} alt={obra.nombre} className="thumbnail" />
+                      )}
+                      {getImagenes(obra).length > 1 && (
+                        <small style={{ display: 'block', color: '#888', fontSize: '11px' }}>
+                          +{getImagenes(obra).length - 1} mas
+                        </small>
                       )}
                     </td>
                     <td>
                       <strong>{obra.nombre}</strong>
-                      {obra.destacada && <span className="badge-destacada">⭐ Destacada</span>}
+                      {obra.destacada && <span className="badge-destacada">Destacada</span>}
                     </td>
                     <td>{obra.categoria}</td>
                     <td>{obra.ubicacion || '-'}</td>
-                    <td>{obra.año}</td>
+                    <td>{obra.anno}</td>
                     <td>
                       <button
                         className={`btn-toggle ${obra.visible ? 'visible' : 'oculta'}`}
                         onClick={() => toggleVisibilidad(obra)}
                       >
-                        {obra.visible ? '👁️ Visible' : '🚫 Oculta'}
+                        {obra.visible ? 'Visible' : 'Oculta'}
                       </button>
                     </td>
                     <td className="actions">
-                      <button
-                        className="btn-icon btn-star"
-                        onClick={() => toggleDestacada(obra)}
-                        title={obra.destacada ? 'Quitar de destacadas' : 'Marcar como destacada'}
-                      >
-                        {obra.destacada ? '⭐' : '☆'}
+                      <button className="btn-icon btn-star" onClick={() => toggleDestacada(obra)} title={obra.destacada ? 'Quitar de destacadas' : 'Marcar como destacada'}>
+                        {obra.destacada ? '★' : '☆'}
                       </button>
-                      <button
-                        className="btn-icon btn-edit"
-                        onClick={() => handleEditar(obra)}
-                      >
-                        ✏️
+                      <button className="btn-icon btn-edit" onClick={() => handleEditar(obra)}>
+                        ✏
                       </button>
-                      <button
-                        className="btn-icon btn-delete"
-                        onClick={() => handleEliminar(obra.id)}
-                      >
-                        🗑️
+                      <button className="btn-icon btn-delete" onClick={() => handleEliminar(obra.id)}>
+                        ✕
                       </button>
                     </td>
                   </tr>

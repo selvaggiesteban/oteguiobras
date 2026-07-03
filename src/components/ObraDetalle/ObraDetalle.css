@@ -4,6 +4,7 @@
 
 .breadcrumb {
   padding: 2rem 0 1rem;
+  padding-top: calc(70px + 2rem);
   background: #fafaf8;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
@@ -417,6 +418,36 @@
   transform: translateY(-2px);
 }
 
+@media (max-width: 1440px) {
+  .obra-info {
+    padding: 4rem 0;
+  }
+
+  .obra-hero h1 {
+    font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+  }
+
+  .info-principal h2 {
+    font-size: clamp(1.25rem, 2vw, 1.75rem);
+  }
+
+  .obra-descripcion {
+    font-size: 0.9375rem;
+  }
+
+  .obra-cta {
+    padding: 4rem 0;
+  }
+
+  .cta-box h3 {
+    font-size: clamp(1.25rem, 2vw, 1.75rem);
+  }
+
+  .galeria-principal {
+    height: clamp(300px, 40vw, 480px);
+  }
+}
+
 @media (max-width: 1024px) {
   .info-grid {
     grid-template-columns: 1fr;
@@ -472,11 +503,11 @@
   }
 
   .info-principal h2 {
-    font-size: 2rem;
+    font-size: 1.5rem;
   }
 
   .obra-descripcion {
-    font-size: 1.0625rem;
+    font-size: 0.9375rem;
   }
 
   .info-datos {
@@ -484,10 +515,10 @@
   }
 
   .cta-box h3 {
-    font-size: 2rem;
+    font-size: 1.5rem;
   }
 
   .cta-box p {
-    font-size: 1.0625rem;
+    font-size: 0.9375rem;
   }
 }

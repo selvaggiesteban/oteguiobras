@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { enviarPostulacion } from '../../api/postulaciones';
+import { useToast } from '../Toast';
 import { useScrollReveal, useStaggerReveal } from '../../hooks/useAnimations';
 import './TrabajaConNosotros.css';
 
@@ -10,6 +12,8 @@ function TrabajaConNosotros() {
     linkedin: '',
     cv: null
   });
+  const [enviando, setEnviando] = useState(false);
+  const toast = useToast();
 
   // Scroll reveal hooks
   const [heroRef, heroClass] = useScrollReveal('up');
@@ -26,10 +30,31 @@ function TrabajaConNosotros() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('CV enviado:', formData);
-    alert('¡Gracias por tu interés! Revisaremos tu CV y nos contactaremos pronto.');
+    setEnviando(true);
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('nombre', formData.nombre);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('telefono', formData.telefono);
+      formDataToSend.append('linkedin', formData.linkedin);
+      if (formData.cv) {
+        formDataToSend.append('cv', formData.cv);
+      }
+
+      await enviarPostulacion(formDataToSend);
+
+      toast.success('¡Gracias por tu interés! Revisaremos tu CV y nos contactaremos pronto.');
+      setFormData({ nombre: '', email: '', telefono: '', linkedin: '', cv: null });
+      const fileInput = document.getElementById('cv');
+      if (fileInput) fileInput.value = '';
+    } catch (err) {
+      console.error('Error al enviar postulación:', err);
+      toast.error('Hubo un error al enviar tu postulación. Intentá de nuevo.');
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
@@ -70,7 +95,7 @@ function TrabajaConNosotros() {
                   <path d="M20 8l-3 3 3 3 3-3-3-3zM8 20l3-3-3-3-3 3 3 3zM32 20l-3-3 3-3 3 3-3 3zM20 32l3-3-3-3-3 3 3 3z" fill="currentColor"/>
                 </svg>
               </div>
-              <h3>Proyectos Desafiantes</h3>
+              <h3>Obras Desafiantes</h3>
               <p>Participá en obras corporativas y comerciales de gran escala y complejidad técnica.</p>
             </div>
 
@@ -155,6 +180,7 @@ function TrabajaConNosotros() {
                     value={formData.nombre}
                     onChange={handleChange}
                     required
+                    disabled={enviando}
                     placeholder="Juan Pérez"
                   />
                 </div>
@@ -168,6 +194,7 @@ function TrabajaConNosotros() {
                     value={formData.email}
                     onChange={handleChange}
                     required
+                    disabled={enviando}
                     placeholder="juan@email.com"
                   />
                 </div>
@@ -181,6 +208,7 @@ function TrabajaConNosotros() {
                     value={formData.telefono}
                     onChange={handleChange}
                     required
+                    disabled={enviando}
                     placeholder="+54 11 1234-5678"
                   />
                 </div>
@@ -194,6 +222,7 @@ function TrabajaConNosotros() {
                     value={formData.linkedin}
                     onChange={handleChange}
                     placeholder="https://linkedin.com/in/tu-perfil"
+                    disabled={enviando}
                   />
                 </div>
 
@@ -207,6 +236,7 @@ function TrabajaConNosotros() {
                       onChange={handleChange}
                       accept=".pdf"
                       required
+                      disabled={enviando}
                     />
                     <label htmlFor="cv" className="file-label">
                       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -218,11 +248,20 @@ function TrabajaConNosotros() {
                   </div>
                 </div>
 
-                <button type="submit" className="btn-submit">
-                  Enviar Postulación
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                <button type="submit" className="btn-submit" disabled={enviando}>
+                  {enviando ? (
+                    <>
+                      <span className="btn-spinner"></span>
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      Enviar Postulación
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </>
+                  )}
                 </button>
               </form>
             </div>

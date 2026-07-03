@@ -208,6 +208,35 @@
   padding: 14px 16px;
   border-top: 1px solid var(--adm-sidebar-border);
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-back-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: rgba(212, 165, 116, 0.1);
+  border: 1px solid rgba(212, 165, 116, 0.2);
+  border-radius: var(--adm-radius);
+  color: var(--adm-sidebar-active-text);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.sidebar-back-link:hover {
+  background: rgba(212, 165, 116, 0.18);
+  border-color: rgba(212, 165, 116, 0.35);
+}
+
+.sidebar-back-link svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .sidebar-env-badge {
@@ -1872,4 +1901,104 @@ table td.actions {
   line-height: 1.7;
   white-space: pre-wrap;
   margin: 0;
+}
+
+/* Multi-image grid (shared by AdminObras & AdminObrasDestacadas) */
+.imagenes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.imagen-thumb {
+  position: relative;
+  border-radius: var(--adm-radius);
+  overflow: hidden;
+  border: 2px solid var(--adm-border);
+  cursor: pointer;
+  transition: all 0.15s;
+  aspect-ratio: 4/3;
+}
+
+.imagen-thumb:hover {
+  border-color: var(--adm-accent);
+  box-shadow: 0 2px 8px rgba(184,137,74,.25);
+}
+
+.imagen-thumb.imagen-portada {
+  border-color: var(--adm-accent);
+  box-shadow: 0 0 0 2px var(--adm-accent-ring);
+}
+
+.imagen-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.portada-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: var(--adm-accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.btn-remove-thumb {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+
+.imagen-thumb:hover .btn-remove-thumb {
+  opacity: 1;
+}
+
+.btn-remove-thumb:hover {
+  background: var(--adm-danger);
+}
+
+.btn-subir-imagen {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--adm-info-light);
+  border: 1.5px solid #bfdbfe;
+  border-radius: var(--adm-radius);
+  color: var(--adm-info);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-subir-imagen:hover {
+  background: var(--adm-info);
+  color: #fff;
+  border-color: var(--adm-info);
 }

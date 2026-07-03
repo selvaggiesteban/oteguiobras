@@ -26,7 +26,8 @@ export const useCountUp = (end, duration = 2000, start = 0) => {
     return () => {
       if (element) observer.unobserve(element);
     };
-  }, [isVisible]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVisible, end]);
 
   useEffect(() => {
     if (!isVisible) return;

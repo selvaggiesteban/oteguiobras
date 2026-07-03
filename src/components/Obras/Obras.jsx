@@ -1,21 +1,24 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { FaSearch, FaMapMarkerAlt, FaRulerCombined, FaCalendarAlt } from 'react-icons/fa';
-import { collection, getDocs } from 'firebase/firestore';
-import { db, COLLECTIONS } from '../../firebase/config';
+import { getObras } from '../../api/obras';
 import { useScrollReveal, useStaggerReveal } from '../../hooks/useAnimations';
 import './Obras.css';
 
-const CATEGORIA_ORDER = ['Retail', 'Retail / Comercial', 'Industrial', 'Oficinas', 'Proyectos', 'Bancos'];
+const CATEGORIA_ORDER = ['Retail / Comercial', 'Industrial', 'Oficinas', 'Proyecto', 'Bancos'];
+
+const toSlug = str => str.toLowerCase().replace(/\s*\/\s*/g, '-').replace(/\s+/g, '-').replace(/-+/g, '-');
+const fromSlug = (slug, categorias) => categorias.find(c => toSlug(c) === slug) || 'Todas';
 
 function Obras() {
+  const { categoria: categoriaSlug } = useParams();
+  const navigate = useNavigate();
   const [obras, setObras] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(false);
   const [categoriaActiva, setCategoriaActiva] = useState('Todas');
   const [busqueda, setBusqueda] = useState('');
   const [ordenar, setOrdenar] = useState('reciente');
-
-  // Scroll reveal hooks
   const [heroContentRef, heroContentClass] = useScrollReveal('up');
   const [statsRef, statsRevealed] = useStaggerReveal();
   const [controlsRef, controlsClass] = useScrollReveal('up', { threshold: 0.1 });
@@ -24,14 +27,11 @@ function Obras() {
   useEffect(() => {
     const cargarObras = async () => {
       try {
-        const snapshot = await getDocs(collection(db, COLLECTIONS.OBRAS));
-        const data = snapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(o => o.visible !== false)
-          .sort((a, b) => (a.orden || 0) - (b.orden || 0));
-        setObras(data);
+        const data = await getObras();
+        const visible = data.filter(o => o.visible !== false);
+        setObras(visible);
       } catch (err) {
-        console.error('Error al cargar obras:', err);
+        setError(true);
       } finally {
         setCargando(false);
       }
@@ -51,6 +51,24 @@ function Obras() {
     })
   ];
 
+  useEffect(() => {
+    if (categoriaSlug && categorias.length > 1) {
+      const match = fromSlug(categoriaSlug, categorias);
+      setCategoriaActiva(match);
+    } else if (!categoriaSlug) {
+      setCategoriaActiva('Todas');
+    }
+  }, [categoriaSlug, obras]);
+
+  const handleCategoriaClick = (categoria) => {
+    setBusqueda('');
+    if (categoria === 'Todas') {
+      navigate('/obras');
+    } else {
+      navigate(`/obras/categoria/${toSlug(categoria)}`);
+    }
+  };
+
   // Filtrar por categoría y búsqueda
   let obrasFiltradas = categoriaActiva === 'Todas'
     ? obras
@@ -66,8 +84,8 @@ function Obras() {
 
   // Ordenar
   const obrasOrdenadas = [...obrasFiltradas].sort((a, b) => {
-    if (ordenar === 'reciente') return (b.año || 0) - (a.año || 0);
-    if (ordenar === 'antigua') return (a.año || 0) - (b.año || 0);
+    if (ordenar === 'reciente') return (b.anno || 0) - (a.anno || 0);
+    if (ordenar === 'antigua') return (a.anno || 0) - (b.anno || 0);
     if (ordenar === 'nombre') return a.nombre.localeCompare(b.nombre);
     return 0;
   });
@@ -82,7 +100,7 @@ function Obras() {
         <div className="container">
           <div className={`page-hero-content ${heroContentClass}`} ref={heroContentRef}>
             <span className="page-badge">Portfolio</span>
-            <h1>Proyectos que transforman espacios</h1>
+            <h1>Obras que transforman espacios</h1>
             <p>
               Más de 200 obras corporativas y comerciales entregadas con excelencia.
               Cada proyecto es un testimonio de nuestra dedicación a la calidad.
@@ -90,7 +108,7 @@ function Obras() {
             <div className={`hero-stats-mini stagger-children ${statsRevealed ? 'revealed' : ''}`} ref={statsRef}>
               <div className="stat-mini">
                 <strong>200+</strong>
-                <span>Proyectos</span>
+                <span>Obras</span>
               </div>
               <div className="stat-mini">
                 <strong>50+</strong>
@@ -153,7 +171,7 @@ function Obras() {
                 <button
                   key={categoria}
                   className={`filter-btn ${categoriaActiva === categoria ? 'active' : ''}`}
-                  onClick={() => setCategoriaActiva(categoria)}
+                  onClick={() => handleCategoriaClick(categoria)}
                 >
                   {categoria}
                   <span className="filter-count">
@@ -175,7 +193,7 @@ function Obras() {
               </span>
             )}
             <span className="count-number">
-              {obrasOrdenadas.length} {obrasOrdenadas.length === 1 ? 'Proyecto' : 'Proyectos'}
+              {obrasOrdenadas.length} {obrasOrdenadas.length === 1 ? 'Obra' : 'Obras'}
             </span>
           </div>
 
@@ -183,7 +201,15 @@ function Obras() {
           {cargando ? (
             <div className="obras-loading">
               <div className="loading-spinner"></div>
-              <p>Cargando proyectos...</p>
+              <p>Cargando obras...</p>
+            </div>
+          ) : error ? (
+            <div className="no-results">
+              <h3>Error al cargar las obras</h3>
+              <p>Hubo un problema de conexión. Por favor intentá de nuevo.</p>
+              <button className="btn-reset-filters" onClick={() => window.location.reload()}>
+                Reintentar
+              </button>
             </div>
           ) : obrasOrdenadas.length > 0 ? (
             <div className={`obras-grid stagger-scale ${gridRevealed ? 'revealed' : ''}`} ref={gridRef}>
@@ -191,9 +217,9 @@ function Obras() {
                 <article key={obra.id} className="obra-card">
                   <Link to={`/obras/${obra.id}`} className="obra-link">
                     <div className="obra-image-wrapper">
-                      <img src={obra.imagen} alt={obra.nombre} className="obra-image" />
+                      <img src={obra.imagenes?.length > 0 ? (obra.imagenes[obra.imagen_portada || 0] || obra.imagenes[0]) : obra.imagen} alt={obra.nombre} className="obra-image" />
                       <div className="obra-overlay">
-                        <span className="obra-view">Ver Proyecto →</span>
+                        <span className="obra-view">Ver Obra →</span>
                       </div>
                       {obra.destacada && (
                         <span className="obra-badge-destacada">Destacada</span>
@@ -209,16 +235,16 @@ function Obras() {
                             <span>{obra.ubicacion}</span>
                           </div>
                         )}
-                        {obra.metrosCuadrados && (
+                        {obra.metros_cuadrados && (
                           <div className="obra-detail-item">
                             <FaRulerCombined />
-                            <span>{obra.metrosCuadrados} m²</span>
+                            <span>{obra.metros_cuadrados} m²</span>
                           </div>
                         )}
-                        {obra.año && (
+                        {obra.anno && (
                           <div className="obra-detail-item">
                             <FaCalendarAlt />
-                            <span>{obra.año}</span>
+                            <span>{obra.anno}</span>
                           </div>
                         )}
                       </div>
@@ -233,13 +259,13 @@ function Obras() {
           ) : (
             <div className="no-results">
               <div className="no-results-icon">🔍</div>
-              <h3>No se encontraron proyectos</h3>
+              <h3>No se encontraron obras</h3>
               <p>Intenta con otros términos de búsqueda o cambia los filtros</p>
               <button
                 className="btn-reset-filters"
                 onClick={() => {
                   setBusqueda('');
-                  setCategoriaActiva('Todas');
+                  navigate('/obras');
                 }}
               >
                 Limpiar filtros

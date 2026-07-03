@@ -28,33 +28,7 @@
   margin: 0;
 }
 
-.btn-demo {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: var(--adm-info-light);
-  border: 1.5px solid #bfdbfe;
-  border-radius: var(--adm-radius);
-  color: var(--adm-info);
-  font-size: 13px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.15s;
-}
 
-.btn-demo:not(:disabled):hover {
-  background: var(--adm-info);
-  color: #fff;
-  border-color: var(--adm-info);
-  transform: translateY(-1px);
-}
-
-.btn-demo:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
 
 /* Add form */
 .agregar-cliente-form {

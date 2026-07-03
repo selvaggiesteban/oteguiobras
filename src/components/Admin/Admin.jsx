@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { equipoData, agregarMiembro, editarMiembro, eliminarMiembro } from '../../data/equipoData';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import AdminHome from './AdminHome';
 import AdminObras from './AdminObras';
 import AdminObrasDestacadas from './AdminObrasDestacadas';
 import AdminClientes from './AdminClientes';
 import AdminFAQ from './AdminFAQ';
+import AdminEquipo from './AdminEquipo';
 import AdminMensajes from './AdminMensajes';
+import AdminPostulaciones from './AdminPostulaciones';
 import './Admin.css';
 
 // SVG Icons
@@ -55,30 +58,6 @@ const IconConstruction = () => (
   </svg>
 );
 
-const IconEdit = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-  </svg>
-);
-
-const IconTrash = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="3 6 5 6 21 6"/>
-    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-    <path d="M10 11v6"/>
-    <path d="M14 11v6"/>
-    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-  </svg>
-);
-
-const IconPlus = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" y1="5" x2="12" y2="19"/>
-    <line x1="5" y1="12" x2="19" y2="12"/>
-  </svg>
-);
-
 const IconInbox = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
@@ -86,60 +65,29 @@ const IconInbox = () => (
   </svg>
 );
 
+const IconBriefcase = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+  </svg>
+);
+
 const NAV_ITEMS = [
   { id: 'home',       label: 'Home',              icon: <IconHome />,         desc: 'Configuración del hero y métricas' },
   { id: 'destacadas', label: 'Obras Destacadas',   icon: <IconStar />,         desc: 'Obras que aparecen en el Home' },
-  { id: 'obras',      label: 'Todas las Obras',    icon: <IconConstruction />, desc: 'Catálogo completo de proyectos' },
+  { id: 'obras',      label: 'Todas las Obras',    icon: <IconConstruction />, desc: 'Catálogo completo de obras' },
   { id: 'clientes',   label: 'Clientes',           icon: <IconBuilding />,     desc: 'Logos del carrusel de clientes' },
   { id: 'faq',        label: 'Preguntas FAQ',       icon: <IconQuestion />,     desc: 'Preguntas frecuentes del sitio' },
   { id: 'equipo',     label: 'Equipo',             icon: <IconUsers />,        desc: 'Miembros del equipo de trabajo' },
-  { id: 'mensajes',   label: 'Mensajes',           icon: <IconInbox />,        desc: 'Consultas recibidas del formulario de contacto' },
+  { id: 'mensajes',       label: 'Mensajes',           icon: <IconInbox />,        desc: 'Consultas recibidas del formulario de contacto' },
+  { id: 'postulaciones',  label: 'Postulaciones',      icon: <IconBriefcase />,    desc: 'CVs recibidos desde "Trabajá con nosotros"' },
 ];
 
 function Admin() {
   const [seccionActiva, setSeccionActiva] = useState('home');
-  const [modoEdicion, setModoEdicion] = useState(null);
-
-  const [formMiembro, setFormMiembro] = useState({
-    nombre: '', cargo: '', especialidad: '', email: '',
-    telefono: '', foto: '', linkedin: '', descripcion: '', destacado: false
-  });
+  const { user, logout } = useAuth();
 
   const seccionInfo = NAV_ITEMS.find(n => n.id === seccionActiva);
-
-  const handleChangeMiembro = (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setFormMiembro({ ...formMiembro, [e.target.name]: value });
-  };
-
-  const handleSubmitMiembro = (e) => {
-    e.preventDefault();
-    if (modoEdicion === 'nueva') {
-      agregarMiembro(formMiembro);
-      alert('Miembro agregado exitosamente');
-    } else if (typeof modoEdicion === 'number') {
-      editarMiembro(modoEdicion, formMiembro);
-      alert('Miembro actualizado exitosamente');
-    }
-    resetFormMiembro();
-  };
-
-  const resetFormMiembro = () => {
-    setFormMiembro({ nombre: '', cargo: '', especialidad: '', email: '', telefono: '', foto: '', linkedin: '', descripcion: '', destacado: false });
-    setModoEdicion(null);
-  };
-
-  const handleEditarMiembro = (miembro) => {
-    setFormMiembro(miembro);
-    setModoEdicion(miembro.id);
-  };
-
-  const handleEliminarMiembro = (id) => {
-    if (window.confirm('¿Estás seguro de eliminar este miembro?')) {
-      eliminarMiembro(id);
-      alert('Miembro eliminado');
-    }
-  };
 
   return (
     <div className="admin-shell">
@@ -169,10 +117,21 @@ function Admin() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="sidebar-env-badge">
-            <div className="sidebar-env-dot" />
-            <span className="sidebar-env-text">Firebase conectado</span>
-          </div>
+          <Link to="/" className="sidebar-back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5"/>
+              <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            <span>Volver al sitio</span>
+          </Link>
+          <button onClick={logout} className="sidebar-back-link" style={{background:'none',border:'none',cursor:'pointer'}}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span>Cerrar sesión</span>
+          </button>
         </div>
       </aside>
 
@@ -186,6 +145,7 @@ function Admin() {
             <p>{seccionInfo?.desc}</p>
           </div>
           <div className="topbar-right">
+            <span className="topbar-user" style={{fontSize:'0.85rem',color:'#888'}}>{user?.email}</span>
             <span className="topbar-badge">
               <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="currentColor"/></svg>
               Producción
@@ -202,141 +162,9 @@ function Admin() {
           {seccionActiva === 'faq' && <AdminFAQ />}
           {seccionActiva === 'obras' && <AdminObras />}
           {seccionActiva === 'mensajes' && <AdminMensajes />}
+          {seccionActiva === 'postulaciones' && <AdminPostulaciones />}
 
-          {seccionActiva === 'equipo' && (
-            <div className="adm-content-grid">
-
-              {/* Form */}
-              <div className="adm-card">
-                <div className="adm-card-header">
-                  <div>
-                    <p className="adm-card-title">
-                      {modoEdicion === 'nueva' ? 'Nuevo Miembro' : modoEdicion ? 'Editar Miembro' : 'Miembros del Equipo'}
-                    </p>
-                    <p className="adm-card-subtitle">
-                      {modoEdicion ? 'Completá los datos del miembro' : 'Gestioná el equipo de trabajo'}
-                    </p>
-                  </div>
-                  {!modoEdicion && (
-                    <button className="adm-btn adm-btn-primary" onClick={() => setModoEdicion('nueva')}>
-                      <IconPlus /> Nuevo Miembro
-                    </button>
-                  )}
-                </div>
-
-                <div className="adm-card-body">
-                  {modoEdicion ? (
-                    <form onSubmit={handleSubmitMiembro} className="adm-form">
-                      <div className="adm-form-row">
-                        <div className="adm-field">
-                          <label className="adm-label">Nombre Completo <span className="required">*</span></label>
-                          <input className="adm-input" type="text" name="nombre" value={formMiembro.nombre} onChange={handleChangeMiembro} required placeholder="Juan Pérez" />
-                        </div>
-                        <div className="adm-field">
-                          <label className="adm-label">Cargo <span className="required">*</span></label>
-                          <input className="adm-input" type="text" name="cargo" value={formMiembro.cargo} onChange={handleChangeMiembro} required placeholder="Director de Obras" />
-                        </div>
-                      </div>
-
-                      <div className="adm-field">
-                        <label className="adm-label">Especialidad <span className="required">*</span></label>
-                        <input className="adm-input" type="text" name="especialidad" value={formMiembro.especialidad} onChange={handleChangeMiembro} required placeholder="Construcción Civil" />
-                      </div>
-
-                      <div className="adm-form-row">
-                        <div className="adm-field">
-                          <label className="adm-label">Email <span className="required">*</span></label>
-                          <input className="adm-input" type="email" name="email" value={formMiembro.email} onChange={handleChangeMiembro} required />
-                        </div>
-                        <div className="adm-field">
-                          <label className="adm-label">Teléfono <span className="required">*</span></label>
-                          <input className="adm-input" type="tel" name="telefono" value={formMiembro.telefono} onChange={handleChangeMiembro} required />
-                        </div>
-                      </div>
-
-                      <div className="adm-field">
-                        <label className="adm-label">URL de Foto <span className="required">*</span></label>
-                        <input className="adm-input" type="url" name="foto" value={formMiembro.foto} onChange={handleChangeMiembro} required placeholder="https://..." />
-                        <span className="adm-hint">URL directa de la imagen (Unsplash, Firebase, etc.)</span>
-                      </div>
-
-                      <div className="adm-field">
-                        <label className="adm-label">LinkedIn</label>
-                        <input className="adm-input" type="url" name="linkedin" value={formMiembro.linkedin} onChange={handleChangeMiembro} placeholder="https://linkedin.com/in/..." />
-                      </div>
-
-                      <div className="adm-field">
-                        <label className="adm-label">Descripción <span className="required">*</span></label>
-                        <textarea className="adm-textarea" name="descripcion" value={formMiembro.descripcion} onChange={handleChangeMiembro} rows="3" required placeholder="Breve descripción del miembro..." />
-                      </div>
-
-                      <div className="adm-checkbox-group">
-                        <label className="adm-checkbox-label">
-                          <input type="checkbox" name="destacado" checked={formMiembro.destacado} onChange={handleChangeMiembro} />
-                          Marcar como miembro destacado
-                        </label>
-                      </div>
-
-                      <div className="adm-form-actions">
-                        <button type="submit" className="adm-btn adm-btn-primary adm-btn-lg">
-                          {modoEdicion === 'nueva' ? 'Agregar Miembro' : 'Guardar Cambios'}
-                        </button>
-                        <button type="button" className="adm-btn adm-btn-secondary adm-btn-lg" onClick={resetFormMiembro}>
-                          Cancelar
-                        </button>
-                      </div>
-                    </form>
-                  ) : (
-                    <div className="adm-empty-state">
-                      <p>Seleccioná "Nuevo Miembro" para agregar uno, o hacé clic en editar en la lista.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* List */}
-              <div className="adm-card">
-                <div className="adm-card-header">
-                  <div>
-                    <p className="adm-card-title">Miembros del Equipo</p>
-                    <p className="adm-card-subtitle">{equipoData.length} miembros registrados</p>
-                  </div>
-                </div>
-                <div className="adm-card-body">
-                  <div className="adm-list">
-                    {equipoData.map(miembro => (
-                      <div key={miembro.id} className="adm-list-item adm-list-item-accent">
-                        <div className="adm-list-item-info">
-                          <h3>{miembro.nombre}</h3>
-                          <p>{miembro.cargo} · {miembro.especialidad}</p>
-                          {miembro.destacado && (
-                            <span className="adm-badge adm-badge-accent" style={{ marginTop: '4px' }}>Destacado</span>
-                          )}
-                        </div>
-                        <div className="adm-list-item-actions">
-                          <button
-                            className="adm-btn adm-btn-icon"
-                            onClick={() => handleEditarMiembro(miembro)}
-                            title="Editar"
-                          >
-                            <IconEdit />
-                          </button>
-                          <button
-                            className="adm-btn adm-btn-icon danger"
-                            onClick={() => handleEliminarMiembro(miembro.id)}
-                            title="Eliminar"
-                          >
-                            <IconTrash />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          )}
+          {seccionActiva === 'equipo' && <AdminEquipo />}
         </div>
       </div>
     </div>

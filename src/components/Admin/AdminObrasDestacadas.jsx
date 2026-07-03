@@ -1,74 +1,109 @@
 import { useState, useEffect, useRef } from 'react';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { storage } from '../../firebase/config';
 import { useToast } from '../Toast';
-import { getObrasDestacadas, actualizarObrasDestacadas, loadObrasDestacadas, cargarDatosDemo } from '../../data/obrasDestacadasData';
+import { useUnsavedWarning } from '../../hooks/useUnsavedWarning';
+import { getDestacadasConfig, updateDestacadasConfig, uploadConfigImage } from '../../api/config';
 import './AdminObrasDestacadas.css';
+
+// Helper: obtener la imagen de portada de una obra (retrocompatible)
+const getPortada = (obra) => {
+  if (obra.imagenes && obra.imagenes.length > 0) {
+    const idx = obra.imagen_portada || 0;
+    return obra.imagenes[idx] || obra.imagenes[0] || '';
+  }
+  return obra.imagen || '';
+};
 
 function AdminObrasDestacadas() {
   const toast = useToast();
-  const [obras, setObras] = useState(getObrasDestacadas());
+  const categorias = ['Retail / Comercial', 'Oficinas', 'Industrial', 'Bancos', 'Gastronómico', 'Hospitalario', 'Inmobiliario', 'Proyecto'];
+  const [obras, setObras] = useState([]);
   const [guardando, setGuardando] = useState(false);
   const [cargando, setCargando] = useState(true);
-  const [cargandoDemo, setCargandoDemo] = useState(false);
-  const [subiendoImagen, setSubiendoImagen] = useState(null); // id de la obra que está subiendo
+  const [subiendoImagen, setSubiendoImagen] = useState(null);
+  const [hasChanges, setHasChanges] = useState(false);
   const fileInputRefs = useRef({});
+  const markSaved = useUnsavedWarning(hasChanges);
 
-  // Cargar obras desde Firebase al montar
   useEffect(() => {
     const cargarObras = async () => {
       setCargando(true);
-      const obrasCargadas = await loadObrasDestacadas();
-      setObras(obrasCargadas);
+      const data = await getDestacadasConfig();
+      setObras(data.obras || data || []);
       setCargando(false);
     };
     cargarObras();
   }, []);
 
   const handleInputChange = (id, campo, valor) => {
-    setObras(prev => prev.map(obra => 
+    setObras(prev => prev.map(obra =>
       obra.id === id ? { ...obra, [campo]: valor } : obra
     ));
+    setHasChanges(true);
   };
 
-  const handleImageUpload = async (obraId, file) => {
-    if (!file) return;
+  // Subir múltiples imágenes a una obra
+  const handleImagesUpload = async (obraId, files) => {
+    if (!files || files.length === 0) return;
 
-    // Validar tipo de archivo
     const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
-    if (!tiposPermitidos.includes(file.type)) {
-      toast.error('Formato no soportado. Usa JPG, PNG, WebP o AVIF');
-      return;
-    }
-
-    // Validar tamaño (máx 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('La imagen no puede superar los 5MB');
-      return;
+    for (const file of files) {
+      if (!tiposPermitidos.includes(file.type)) {
+        toast.error(`Formato no soportado: ${file.name}. Usa JPG, PNG, WebP o AVIF`);
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} supera los 5MB`);
+        return;
+      }
     }
 
     setSubiendoImagen(obraId);
-
     try {
-      const extension = file.name.split('.').pop();
-      const nombreArchivo = `obras-destacadas/obra_${obraId}_${Date.now()}.${extension}`;
-      const storageRef = ref(storage, nombreArchivo);
+      const nuevasImagenes = [];
+      for (const file of files) {
+        const result = await uploadConfigImage(file, 'imagen');
+        nuevasImagenes.push(result.url);
+      }
 
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-
-      handleInputChange(obraId, 'imagen', url);
-      toast.success('Imagen subida exitosamente');
+      setObras(prev => prev.map(obra => {
+        if (obra.id !== obraId) return obra;
+        const imagenesActuales = obra.imagenes || (obra.imagen ? [obra.imagen] : []);
+        return {
+          ...obra,
+          imagenes: [...imagenesActuales, ...nuevasImagenes],
+          imagen_portada: obra.imagen_portada || 0
+        };
+      }));
+      setHasChanges(true);
+      toast.success(`${files.length} imagen(es) subida(s). Guardá los cambios.`);
     } catch (error) {
-      console.error('Error subiendo imagen:', error);
-      toast.error('Error al subir la imagen: ' + error.message);
+      console.error('Error subiendo imágenes:', error);
+      toast.error('Error al subir: ' + error.message);
     } finally {
       setSubiendoImagen(null);
-      // Limpiar el input
-      if (fileInputRefs.current[obraId]) {
-        fileInputRefs.current[obraId].value = '';
-      }
+      if (fileInputRefs.current[obraId]) fileInputRefs.current[obraId].value = '';
     }
+  };
+
+  const handleRemoveImage = async (obraId, imgIndex) => {
+    setObras(prev => prev.map(obra => {
+      if (obra.id !== obraId) return obra;
+      const imagenes = [...(obra.imagenes || [])];
+      imagenes.splice(imgIndex, 1);
+
+      // Ajustar portada si es necesario
+      let portada = obra.imagen_portada || 0;
+      if (imgIndex === portada) portada = 0;
+      else if (imgIndex < portada) portada = portada - 1;
+      if (portada >= imagenes.length) portada = Math.max(0, imagenes.length - 1);
+
+      return { ...obra, imagenes, imagen_portada: portada };
+    }));
+    setHasChanges(true);
+  };
+
+  const handleSetPortada = (obraId, imgIndex) => {
+    handleInputChange(obraId, 'imagen_portada', imgIndex);
   };
 
   const handleEliminarObra = (id) => {
@@ -76,10 +111,9 @@ function AdminObrasDestacadas() {
       toast.warning('Debe haber al menos 1 obra destacada');
       return;
     }
-
     if (!window.confirm('¿Estás seguro de eliminar esta obra destacada?')) return;
-
     setObras(prev => prev.filter(obra => obra.id !== id));
+    setHasChanges(true);
     toast.success('Obra eliminada. Guardá los cambios para confirmar.');
   };
 
@@ -90,22 +124,21 @@ function AdminObrasDestacadas() {
       titulo: '',
       categoria: 'Retail / Comercial',
       descripcion: '',
-      imagen: '',
-      año: new Date().getFullYear(),
-      metroCuadrados: '',
+      imagenes: [],
+      imagen_portada: 0,
+      anno: new Date().getFullYear(),
+      metros_cuadrados: '',
       ubicacion: ''
     };
     setObras(prev => [...prev, nuevaObra]);
+    setHasChanges(true);
     toast.success('Nueva obra agregada. Completá los datos y guardá.');
-
-    // Scroll al final
     setTimeout(() => {
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }, 100);
   };
 
   const handleGuardar = async () => {
-    // Validar que todas tengan al menos título
     const sinTitulo = obras.find(o => !o.titulo.trim());
     if (sinTitulo) {
       toast.warning('Todas las obras deben tener un título');
@@ -114,7 +147,17 @@ function AdminObrasDestacadas() {
 
     setGuardando(true);
     try {
-      await actualizarObrasDestacadas(obras);
+      // Normalizar antes de guardar
+      const obrasNormalizadas = obras.map(obra => {
+        if (!obra.imagenes && obra.imagen) {
+          return { ...obra, imagenes: [obra.imagen], imagen_portada: 0 };
+        }
+        return obra;
+      });
+      await updateDestacadasConfig({obras: obrasNormalizadas});
+      setObras(obrasNormalizadas);
+      setHasChanges(false);
+      markSaved();
       toast.success('Obras destacadas guardadas exitosamente!');
     } catch (error) {
       toast.error('Error al guardar las obras: ' + error.message);
@@ -123,26 +166,11 @@ function AdminObrasDestacadas() {
     }
   };
 
-  const handleCargarDemo = async () => {
-    if (window.confirm('⚠️ ¿Estás seguro de cargar las obras demo?\n\nEsto sobrescribirá las obras destacadas actuales con los ejemplos.')) {
-      setCargandoDemo(true);
-      try {
-        const obrasDemo = await cargarDatosDemo();
-        setObras(obrasDemo);
-        toast.success('Obras demo cargadas exitosamente!');
-      } catch (error) {
-        toast.error('Error al cargar obras demo: ' + error.message);
-      } finally {
-        setCargandoDemo(false);
-      }
-    }
-  };
-
   if (cargando) {
     return (
       <div className="admin-obras-destacadas">
         <div style={{ textAlign: 'center', padding: '3rem' }}>
-          <p>⏳ Cargando obras destacadas desde Firebase...</p>
+          <p>Cargando obras destacadas...</p>
         </div>
       </div>
     );
@@ -152,193 +180,177 @@ function AdminObrasDestacadas() {
     <div className="admin-obras-destacadas">
       <div className="admin-header">
         <div>
-          <h2>🏗️ Gestión de Obras Destacadas</h2>
+          <h2>Gestion de Obras Destacadas</h2>
           <p>Administra las obras destacadas que aparecen en el Home ({obras.length} obras)</p>
         </div>
         <div className="admin-header-actions">
-          <button 
-            className="btn-agregar-obra"
-            onClick={handleAgregarObra}
-          >
-            ➕ Agregar Obra
-          </button>
-          <button 
-            className="btn-demo"
-            onClick={handleCargarDemo}
-            disabled={cargandoDemo}
-          >
-            {cargandoDemo ? '⏳ Cargando...' : '📦 Cargar Demo'}
+          <button className="btn-agregar-obra" onClick={handleAgregarObra}>
+            + Agregar Obra
           </button>
         </div>
       </div>
 
       <div className="obras-destacadas-list">
-        {obras.map((obra, index) => (
-          <div key={obra.id} className="obra-destacada-form">
-            <div className="obra-form-header">
-              <h3>Obra Destacada #{index + 1}</h3>
-              <button
-                className="btn-eliminar-obra"
-                onClick={() => handleEliminarObra(obra.id)}
-                title="Eliminar esta obra destacada"
-              >
-                🗑️ Eliminar
-              </button>
-            </div>
-            
-            <div className="form-grid">
-              <div className="form-group full-width">
-                <label>Título de la obra</label>
-                <input
-                  type="text"
-                  value={obra.titulo}
-                  onChange={(e) => handleInputChange(obra.id, 'titulo', e.target.value)}
-                  placeholder="Ej: Hicimos reformas en el Secretariado Nacional de la UOM"
-                />
-              </div>
+        {obras.map((obra, index) => {
+          const imagenes = obra.imagenes || (obra.imagen ? [obra.imagen] : []);
+          const portadaIdx = obra.imagen_portada || 0;
 
-              <div className="form-group">
-                <label>Categoría</label>
-                <select
-                  value={obra.categoria}
-                  onChange={(e) => handleInputChange(obra.id, 'categoria', e.target.value)}
+          return (
+            <div key={obra.id} className="obra-destacada-form">
+              <div className="obra-form-header">
+                <h3>Obra Destacada #{index + 1}</h3>
+                <button
+                  className="btn-eliminar-obra"
+                  onClick={() => handleEliminarObra(obra.id)}
+                  title="Eliminar esta obra destacada"
                 >
-                  <option value="Retail / Comercial">Retail / Comercial</option>
-                  <option value="Oficinas">Oficinas</option>
-                  <option value="Industrial">Industrial</option>
-                  <option value="Bancos">Bancos</option>
-                  <option value="Institucional">Institucional</option>
-                  <option value="Gastronómico">Gastronómico</option>
-                  <option value="Hospitalario">Hospitalario</option>
-                  <option value="Inmobiliario">Inmobiliario</option>
-                </select>
+                  Eliminar
+                </button>
               </div>
 
-              <div className="form-group">
-                <label>Ubicación</label>
-                <input
-                  type="text"
-                  value={obra.ubicacion}
-                  onChange={(e) => handleInputChange(obra.id, 'ubicacion', e.target.value)}
-                  placeholder="Ej: Buenos Aires"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Metros Cuadrados</label>
-                <input
-                  type="text"
-                  value={obra.metroCuadrados}
-                  onChange={(e) => handleInputChange(obra.id, 'metroCuadrados', e.target.value)}
-                  placeholder="Ej: 2,500"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Año</label>
-                <input
-                  type="number"
-                  value={obra.año}
-                  onChange={(e) => handleInputChange(obra.id, 'año', parseInt(e.target.value) || new Date().getFullYear())}
-                  placeholder={new Date().getFullYear().toString()}
-                />
-              </div>
-
-              <div className="form-group full-width">
-                <label>Descripción</label>
-                <textarea
-                  value={obra.descripcion}
-                  onChange={(e) => handleInputChange(obra.id, 'descripcion', e.target.value)}
-                  placeholder="Descripción breve de la obra..."
-                  rows="3"
-                />
-              </div>
-
-              <div className="form-group full-width">
-                <label>Imagen</label>
-                
-                <div className="imagen-upload-container">
-                  {/* Subir archivo */}
-                  <div className="imagen-upload-archivo">
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
-                      onChange={(e) => handleImageUpload(obra.id, e.target.files[0])}
-                      ref={el => fileInputRefs.current[obra.id] = el}
-                      id={`file-upload-${obra.id}`}
-                      className="file-input-hidden"
-                    />
-                    <label 
-                      htmlFor={`file-upload-${obra.id}`} 
-                      className={`btn-subir-imagen ${subiendoImagen === obra.id ? 'subiendo' : ''}`}
-                    >
-                      {subiendoImagen === obra.id ? '⏳ Subiendo...' : '📁 Subir imagen'}
-                    </label>
-                  </div>
-
-                  <span className="imagen-separador">o</span>
-
-                  {/* URL manual */}
+              <div className="form-grid">
+                <div className="form-group full-width">
+                  <label>Titulo de la obra</label>
                   <input
                     type="text"
-                    value={obra.imagen}
-                    onChange={(e) => handleInputChange(obra.id, 'imagen', e.target.value)}
-                    placeholder="Pegar URL de imagen..."
-                    className="imagen-url-input"
+                    value={obra.titulo}
+                    onChange={(e) => handleInputChange(obra.id, 'titulo', e.target.value)}
+                    placeholder="Ej: Hicimos reformas en el Secretariado Nacional de la UOM"
                   />
-
-                  {obra.imagen && (
-                    <button
-                      type="button"
-                      className="btn-quitar-imagen"
-                      onClick={() => handleInputChange(obra.id, 'imagen', '')}
-                      title="Quitar imagen"
-                    >
-                      ✕
-                    </button>
-                  )}
                 </div>
 
-                <small className="recomendacion">
-                  📐 Tamaño recomendado: 800x600px (ratio 4:3) • Peso máx: 5MB • Formatos: JPG, PNG, WebP, AVIF
-                </small>
+                <div className="form-group">
+                  <label>Categoria</label>
+                  <select
+                    value={obra.categoria}
+                    onChange={(e) => handleInputChange(obra.id, 'categoria', e.target.value)}
+                  >
+                    {categorias.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
 
-                {obra.imagen && (
-                  <div className="image-preview">
-                    <img src={obra.imagen} alt="Preview" />
+                <div className="form-group">
+                  <label>Ubicacion</label>
+                  <input
+                    type="text"
+                    value={obra.ubicacion}
+                    onChange={(e) => handleInputChange(obra.id, 'ubicacion', e.target.value)}
+                    placeholder="Ej: Buenos Aires"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Metros Cuadrados</label>
+                  <input
+                    type="text"
+                    value={obra.metros_cuadrados}
+                    onChange={(e) => handleInputChange(obra.id, 'metros_cuadrados', e.target.value)}
+                    placeholder="Ej: 2,500"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Ano</label>
+                  <input
+                    type="number"
+                    value={obra.anno}
+                    onChange={(e) => handleInputChange(obra.id, 'anno', parseInt(e.target.value) || new Date().getFullYear())}
+                    placeholder={new Date().getFullYear().toString()}
+                  />
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Descripcion</label>
+                  <textarea
+                    value={obra.descripcion}
+                    onChange={(e) => handleInputChange(obra.id, 'descripcion', e.target.value)}
+                    placeholder="Descripcion breve de la obra..."
+                    rows="3"
+                  />
+                </div>
+
+                {/* Multi-imagen */}
+                <div className="form-group full-width">
+                  <label>Imagenes ({imagenes.length}) — Hacé clic en una imagen para elegirla como portada</label>
+
+                  {imagenes.length > 0 && (
+                    <div className="imagenes-grid">
+                      {imagenes.map((img, imgIdx) => (
+                        <div
+                          key={imgIdx}
+                          className={`imagen-thumb${imgIdx === portadaIdx ? ' imagen-portada' : ''}`}
+                          onClick={() => handleSetPortada(obra.id, imgIdx)}
+                          title={imgIdx === portadaIdx ? 'Imagen de portada' : 'Clic para usar como portada'}
+                        >
+                          <img src={img} alt={`Imagen ${imgIdx + 1}`} />
+                          {imgIdx === portadaIdx && <span className="portada-badge">Portada</span>}
+                          <button
+                            type="button"
+                            className="btn-remove-thumb"
+                            onClick={(e) => { e.stopPropagation(); handleRemoveImage(obra.id, imgIdx); }}
+                            title="Eliminar imagen"
+                          >
+                            x
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="imagen-upload-container">
+                    <div className="imagen-upload-archivo">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
+                        multiple
+                        onChange={(e) => handleImagesUpload(obra.id, Array.from(e.target.files))}
+                        ref={el => fileInputRefs.current[obra.id] = el}
+                        id={`file-upload-${obra.id}`}
+                        className="file-input-hidden"
+                      />
+                      <label
+                        htmlFor={`file-upload-${obra.id}`}
+                        className={`btn-subir-imagen ${subiendoImagen === obra.id ? 'subiendo' : ''}`}
+                      >
+                        {subiendoImagen === obra.id ? 'Subiendo...' : 'Subir imagenes'}
+                      </label>
+                    </div>
                   </div>
-                )}
+
+                  <small className="recomendacion">
+                    Tamano recomendado: 800x600px (ratio 4:3) - Peso max: 5MB - Formatos: JPG, PNG, WebP, AVIF. Podes subir varias a la vez.
+                  </small>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {obras.length === 0 && (
         <div className="obras-empty">
-          <p>No hay obras destacadas. Agregá una nueva para comenzar.</p>
+          <p>No hay obras destacadas. Agrega una nueva para comenzar.</p>
           <button className="btn-agregar-obra" onClick={handleAgregarObra}>
-            ➕ Agregar Primera Obra
+            + Agregar Primera Obra
           </button>
         </div>
       )}
 
       <div className="admin-actions">
         <button onClick={handleGuardar} className="btn-guardar" disabled={guardando}>
-          {guardando ? '⏳ Guardando en Firebase...' : '💾 Guardar Cambios'}
+          {guardando ? 'Guardando...' : 'Guardar Cambios'}
         </button>
       </div>
 
       <div className="admin-info">
-        <h4>ℹ️ Información</h4>
+        <h4>Informacion</h4>
         <ul>
-          <li>Las obras se muestran en un diseño especial en el Home</li>
-          <li>La primera obra aparece más grande</li>
-          <li>Las obras 2 y 3 aparecen juntas en una fila</li>
-          <li>La cuarta obra aparece grande al final</li>
-          <li>Podés agregar, editar y eliminar obras destacadas</li>
-          <li>Las imágenes se pueden subir desde tu PC o pegar una URL</li>
-          <li>Los cambios se guardan en Firebase y persisten en la nube ☁️</li>
+          <li>Podes subir varias imagenes por obra</li>
+          <li>Hacé clic en una imagen para elegirla como portada (la que se muestra en el Home)</li>
+          <li>La primera obra aparece mas grande en el Home</li>
+          <li>Los cambios se guardan en el servidor y persisten en la nube</li>
         </ul>
       </div>
     </div>

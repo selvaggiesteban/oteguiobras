@@ -231,20 +231,40 @@
 }
 
 /* Responsive */
+@media (max-width: 1440px) {
+  .logo-img {
+    height: 40px;
+  }
+
+  .logo-wrapper {
+    padding: 0.625rem 1.25rem;
+  }
+
+  .nav-link {
+    font-size: 0.8125rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .btn-header {
+    padding: 0.625rem 1.5rem;
+    font-size: 0.75rem;
+  }
+}
+
 @media (max-width: 1024px) {
   .header-container {
     padding: 1rem 2rem;
   }
-  
+
   .nav {
     gap: 0.25rem;
   }
-  
+
   .nav-link {
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
   }
-  
+
   .btn-header {
     padding: 0.75rem 1.5rem;
     font-size: 0.875rem;

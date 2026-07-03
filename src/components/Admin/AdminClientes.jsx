@@ -1,31 +1,22 @@
 import { useState, useEffect } from 'react';
 import { FaTrash, FaArrowUp, FaArrowDown, FaPlus, FaImage } from 'react-icons/fa';
 import { useToast } from '../Toast';
-import { 
-  getClientes, 
-  loadClientes, 
-  agregarCliente, 
-  eliminarCliente, 
-  reordenarClientes,
-  subirLogoCliente,
-  cargarDatosDemo 
-} from '../../data/clientesData';
+import { getClientesConfig, updateClientesConfig, uploadConfigImage } from '../../api/config';
 import './AdminClientes.css';
 
 function AdminClientes() {
   const toast = useToast();
-  const [clientes, setClientes] = useState(getClientes());
+  const [clientes, setClientes] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [subiendo, setSubiendo] = useState(false);
-  const [cargandoDemo, setCargandoDemo] = useState(false);
   const [nuevoCliente, setNuevoCliente] = useState({ nombre: '', logoUrl: '' });
   const [archivoSeleccionado, setArchivoSeleccionado] = useState(null);
 
   useEffect(() => {
     const cargarDatos = async () => {
       setCargando(true);
-      const clientesCargados = await loadClientes();
-      setClientes(clientesCargados);
+      const data = await getClientesConfig();
+      setClientes(data.clientes || []);
       setCargando(false);
     };
     cargarDatos();
@@ -59,16 +50,18 @@ function AdminClientes() {
 
     setSubiendo(true);
     try {
-      // Subir imagen a Firebase Storage
-      const logoUrl = await subirLogoCliente(archivoSeleccionado, nuevoCliente.nombre);
-      
-      // Agregar cliente con la URL del logo
-      const clientesActualizados = await agregarCliente({
+      const result = await uploadConfigImage(archivoSeleccionado, 'logo');
+      const logoUrl = result.url;
+
+      const nuevo = {
+        id: Date.now().toString(),
         nombre: nuevoCliente.nombre,
         logoUrl: logoUrl
-      });
-      
-      setClientes(clientesActualizados);
+      };
+
+      const updatedClientes = [...clientes, nuevo];
+      await updateClientesConfig({ clientes: updatedClientes });
+      setClientes(updatedClientes);
       setNuevoCliente({ nombre: '', logoUrl: '' });
       setArchivoSeleccionado(null);
       
@@ -86,8 +79,9 @@ function AdminClientes() {
   const handleEliminar = async (id) => {
     if (window.confirm('¿Estás seguro de eliminar este cliente?')) {
       try {
-        const clientesActualizados = await eliminarCliente(id);
-        setClientes(clientesActualizados);
+        const updatedList = clientes.filter(c => c.id !== id);
+        await updateClientesConfig({ clientes: updatedList });
+        setClientes(updatedList);
         toast.success('Cliente eliminado!');
       } catch (error) {
         toast.error('Error al eliminar: ' + error.message);
@@ -103,8 +97,8 @@ function AdminClientes() {
     [nuevosClientes[index], nuevosClientes[index - 1]];
     
     try {
-      const clientesActualizados = await reordenarClientes(nuevosClientes);
-      setClientes(clientesActualizados);
+      await updateClientesConfig({ clientes: nuevosClientes });
+      setClientes(nuevosClientes);
     } catch (error) {
       toast.error('Error al reordenar: ' + error.message);
     }
@@ -112,31 +106,16 @@ function AdminClientes() {
 
   const handleMoverAbajo = async (index) => {
     if (index === clientes.length - 1) return;
-    
+
     const nuevosClientes = [...clientes];
-    [nuevosClientes[index], nuevosClientes[index + 1]] = 
+    [nuevosClientes[index], nuevosClientes[index + 1]] =
     [nuevosClientes[index + 1], nuevosClientes[index]];
-    
+
     try {
-      const clientesActualizados = await reordenarClientes(nuevosClientes);
-      setClientes(clientesActualizados);
+      await updateClientesConfig({ clientes: nuevosClientes });
+      setClientes(nuevosClientes);
     } catch (error) {
       toast.error('Error al reordenar: ' + error.message);
-    }
-  };
-
-  const handleCargarDemo = async () => {
-    if (window.confirm('⚠️ ¿Cargar clientes de ejemplo?\n\nEsto reemplazará todos los clientes actuales.')) {
-      setCargandoDemo(true);
-      try {
-        const clientesDemo = await cargarDatosDemo();
-        setClientes(clientesDemo);
-        toast.success('Clientes demo cargados!');
-      } catch (error) {
-        toast.error('Error: ' + error.message);
-      } finally {
-        setCargandoDemo(false);
-      }
     }
   };
 
@@ -144,7 +123,7 @@ function AdminClientes() {
     return (
       <div className="admin-clientes">
         <div style={{ textAlign: 'center', padding: '3rem' }}>
-          <p>⏳ Cargando clientes desde Firebase...</p>
+          <p>⏳ Cargando clientes desde servidor...</p>
         </div>
       </div>
     );
@@ -157,13 +136,6 @@ function AdminClientes() {
           <h2>🏢 Gestión de Clientes</h2>
           <p>Administra los logos que aparecen en el carrusel del Home</p>
         </div>
-        <button 
-          className="btn-demo"
-          onClick={handleCargarDemo}
-          disabled={cargandoDemo}
-        >
-          {cargandoDemo ? '⏳ Cargando...' : '📦 Cargar Clientes Demo'}
-        </button>
       </div>
 
       {/* Agregar nuevo cliente */}
@@ -258,7 +230,7 @@ function AdminClientes() {
         <h4>ℹ️ Información</h4>
         <ul>
           <li>Los logos se muestran en un carrusel infinito en el Home</li>
-          <li>Las imágenes se suben a Firebase Storage</li>
+          <li>Las imágenes se suben al servidor</li>
           <li>Usa logos en formato PNG con fondo transparente para mejor resultado</li>
           <li>Tamaño recomendado: 200x100px</li>
           <li>Los logos aparecen en escala de grises y se colorean al hacer hover</li>

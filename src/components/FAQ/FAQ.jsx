@@ -1,32 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useScrollReveal, useStaggerReveal } from '../../hooks/useAnimations';
-import { getFAQ, loadFAQ } from '../../data/faqData';
+import { getFaqConfig } from '../../api/config';
 import './FAQ.css';
 
 function FAQ() {
   const [activeIndex, setActiveIndex] = useState(null);
   const [faqs, setFaqs] = useState([]);
-  
+
   // Scroll reveal hooks
   const [headerRef, headerClass] = useScrollReveal('up');
   const [listRef, listRevealed] = useStaggerReveal({ threshold: 0.08 });
 
   useEffect(() => {
     cargarPreguntas();
-
-    // Escuchar cambios
-    const handleFAQChange = () => {
-      cargarPreguntas();
-    };
-
-    window.addEventListener('faqUpdated', handleFAQChange);
-    return () => window.removeEventListener('faqUpdated', handleFAQChange);
   }, []);
 
   const cargarPreguntas = async () => {
     try {
-      const data = await loadFAQ();
-      setFaqs(data);
+      const data = await getFaqConfig();
+      setFaqs(data.preguntas || []);
     } catch (error) {
       console.error('Error cargando FAQ:', error);
     }

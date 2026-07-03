@@ -60,35 +60,6 @@
   transform: translateY(-1px);
 }
 
-.btn-demo {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: var(--adm-info-light);
-  border: 1.5px solid #bfdbfe;
-  border-radius: var(--adm-radius);
-  color: var(--adm-info);
-  font-size: 13px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-
-.btn-demo:not(:disabled):hover {
-  background: var(--adm-info);
-  color: #fff;
-  border-color: var(--adm-info);
-  transform: translateY(-1px);
-}
-
-.btn-demo:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
 /* Obras list */
 .obras-destacadas-list {
   display: flex;
@@ -242,6 +213,84 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* Multi-image grid */
+.imagenes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.imagen-thumb {
+  position: relative;
+  border-radius: var(--adm-radius);
+  overflow: hidden;
+  border: 2px solid var(--adm-border);
+  cursor: pointer;
+  transition: all 0.15s;
+  aspect-ratio: 4/3;
+}
+
+.imagen-thumb:hover {
+  border-color: var(--adm-accent);
+  box-shadow: 0 2px 8px rgba(184,137,74,.25);
+}
+
+.imagen-thumb.imagen-portada {
+  border-color: var(--adm-accent);
+  box-shadow: 0 0 0 2px var(--adm-accent-ring);
+}
+
+.imagen-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.portada-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: var(--adm-accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.btn-remove-thumb {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+
+.imagen-thumb:hover .btn-remove-thumb {
+  opacity: 1;
+}
+
+.btn-remove-thumb:hover {
+  background: var(--adm-danger);
 }
 
 .file-input-hidden {

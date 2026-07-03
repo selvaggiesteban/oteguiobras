@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db, COLLECTIONS } from '../../firebase/config';
+import { enviarMensaje } from '../../api/contacto';
 import { useToast } from '../Toast';
 import { useScrollReveal, useStaggerReveal } from '../../hooks/useAnimations';
 import './Contacto.css';
@@ -53,10 +52,9 @@ function Contacto() {
     }
     setLoading(true);
     try {
-      await addDoc(collection(db, COLLECTIONS.CONTACTO), {
+      await enviarMensaje({
         ...formData,
-        leido: false,
-        fechaEnvio: serverTimestamp()
+        leido: false
       });
       toast.success('¡Mensaje enviado! Te responderemos en breve.');
       setFormData({ nombre: '', email: '', telefono: '', empresa: '', mensaje: '' });

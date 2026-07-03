@@ -35,35 +35,6 @@
   flex-wrap: wrap;
 }
 
-/* Demo button */
-.btn-demo {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: var(--adm-info-light);
-  border: 1.5px solid #bfdbfe;
-  border-radius: var(--adm-radius);
-  color: var(--adm-info);
-  font-size: 13px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-demo:not(:disabled):hover {
-  background: var(--adm-info);
-  color: #fff;
-  border-color: var(--adm-info);
-  transform: translateY(-1px);
-}
-
-.btn-demo:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
 /* Save button */
 .btn-guardar {
   display: inline-flex;
@@ -299,6 +270,30 @@
   margin: 0;
 }
 
+/* Color picker */
+.color-picker-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.color-input {
+  width: 40px;
+  height: 36px;
+  padding: 2px;
+  border: 1px solid var(--adm-card-border);
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.color-text-input {
+  flex: 1;
+  font-family: monospace;
+  font-size: 13px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .admin-home-header {
@@ -406,4 +401,252 @@
   border-top-color: var(--adm-accent);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
+}
+
+/* ================================================
+   HERO CAROUSEL GRID (Admin)
+   ================================================ */
+
+.hero-carousel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.hero-carousel-item {
+  position: relative;
+  border-radius: var(--adm-radius);
+  overflow: hidden;
+  border: 1.5px solid var(--adm-border);
+  aspect-ratio: 16 / 9;
+}
+
+.hero-carousel-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-carousel-item-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.hero-carousel-item:hover .hero-carousel-item-overlay {
+  opacity: 1;
+}
+
+.hero-carousel-item-number {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+.hero-carousel-item-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.hero-carousel-item-actions button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.hero-carousel-item-actions button:hover:not(:disabled) {
+  background: #fff;
+  transform: scale(1.1);
+}
+
+.hero-carousel-item-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.hero-carousel-item-actions .btn-remove-image {
+  background: rgba(239, 68, 68, 0.9);
+  color: #fff;
+}
+
+.hero-carousel-item-actions .btn-remove-image:hover:not(:disabled) {
+  background: #ef4444;
+}
+
+/* ================================================
+   HERO SLIDE EDITOR (por slide)
+   ================================================ */
+
+.hero-slides-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.hero-slide-editor {
+  border: 1.5px solid var(--adm-border);
+  border-radius: var(--adm-radius);
+  background: var(--adm-surface);
+  overflow: hidden;
+}
+
+.hero-slide-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--adm-bg);
+  border-bottom: 1px solid var(--adm-border);
+}
+
+.hero-slide-thumb {
+  position: relative;
+  width: 100px;
+  height: 56px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.hero-slide-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-slide-number {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-slide-summary {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.hero-slide-summary strong {
+  font-size: 0.875rem;
+  color: var(--adm-text);
+}
+
+.hero-slide-pos-tag {
+  font-size: 0.75rem;
+  color: var(--adm-accent);
+  font-weight: 600;
+}
+
+.hero-slide-has-text {
+  font-size: 0.7rem;
+  color: var(--adm-muted);
+}
+
+.hero-slide-header-actions {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.hero-slide-header-actions button {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--adm-border);
+  background: var(--adm-surface);
+  color: var(--adm-text);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.hero-slide-header-actions button:hover:not(:disabled) {
+  background: var(--adm-accent);
+  color: #fff;
+  border-color: var(--adm-accent);
+}
+
+.hero-slide-header-actions button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.hero-slide-header-actions .btn-remove-image {
+  background: transparent;
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.hero-slide-header-actions .btn-remove-image:hover:not(:disabled) {
+  background: #ef4444;
+  color: #fff;
+}
+
+.hero-slide-fields {
+  padding: 12px 14px;
+}
+
+.hero-slide-field-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.hero-slide-fields .form-group {
+  margin-bottom: 0;
+}
+
+.hero-slide-fields .form-group label {
+  font-size: 0.75rem;
+  margin-bottom: 3px;
+}
+
+.hero-slide-fields .form-group input,
+.hero-slide-fields .form-group select {
+  font-size: 0.8125rem;
+  padding: 6px 10px;
+}
+
+.hero-slide-fields small {
+  font-size: 0.7rem;
+  color: var(--adm-muted);
 }

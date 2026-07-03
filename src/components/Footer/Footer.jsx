@@ -36,7 +36,7 @@ function Footer() {
               <span className="footer-col-label">Navegación</span>
               <nav className="footer-nav">
                 <Link to="/">Inicio</Link>
-                <Link to="/obras">Proyectos</Link>
+                <Link to="/obras">Obras</Link>
                 <Link to="/equipo">Equipo</Link>
                 <Link to="/contacto">Contacto</Link>
                 <Link to="/trabaja-con-nosotros">Unite!</Link>
@@ -47,7 +47,7 @@ function Footer() {
             <div className="footer-col">
               <span className="footer-col-label">Contacto</span>
               <div className="footer-contact">
-                <a href="mailto:info@oteguiobras.com">info@oteguiobras.com</a>
+                <a href="mailto:oficina@oteguiobras.com">oficina@oteguiobras.com</a>
                 <a href="tel:+5491120801145">+54 9 11 2080-1145</a>
                 <span>Cochabamba 1355, CABA</span>
               </div>

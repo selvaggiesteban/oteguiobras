@@ -1,7 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
-import { db, COLLECTIONS } from '../../firebase/config';
+import { getObra } from '../../api/obras';
 import { useScrollReveal } from '../../hooks/useAnimations';
 import './ObraDetalle.css';
 
@@ -10,6 +9,7 @@ function ObraDetalle() {
   const navigate = useNavigate();
   const [obra, setObra] = useState(null);
   const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(false);
   const [imagenActual, setImagenActual] = useState(0);
 
   // Scroll reveal hooks
@@ -21,13 +21,12 @@ function ObraDetalle() {
   useEffect(() => {
     const cargarObra = async () => {
       try {
-        const docRef = doc(db, COLLECTIONS.OBRAS, id);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setObra({ id: docSnap.id, ...docSnap.data() });
+        const data = await getObra(id);
+        if (data && !data.error) {
+          setObra(data);
         }
       } catch (err) {
-        console.error('Error al cargar obra:', err);
+        setError(true);
       } finally {
         setCargando(false);
       }
@@ -50,8 +49,13 @@ function ObraDetalle() {
     return (
       <div className="obra-detalle-error">
         <div className="container">
-          <h2>Proyecto no encontrado</h2>
-          <Link to="/obras" className="btn-volver">Volver a Obras</Link>
+          <h2>{error ? 'Error al cargar el proyecto' : 'Proyecto no encontrado'}</h2>
+          <p>{error ? 'Hubo un problema de conexión. Por favor intentá de nuevo.' : ''}</p>
+          {error ? (
+            <button className="btn-volver" onClick={() => window.location.reload()}>Reintentar</button>
+          ) : (
+            <Link to="/obras" className="btn-volver">Volver a Obras</Link>
+          )}
         </div>
       </div>
     );
@@ -83,8 +87,8 @@ function ObraDetalle() {
       {/* Hero de la obra */}
       <section className="obra-hero">
         <div className="container">
-          <button 
-            className="btn-back" 
+          <button
+            className="btn-back"
             onClick={() => navigate('/obras')}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -92,7 +96,7 @@ function ObraDetalle() {
             </svg>
             Volver a Obras
           </button>
-          
+
           <div className={`obra-hero-content ${heroClass}`} ref={heroRef}>
             <span className="obra-tag-detalle">{obra.categoria}</span>
             <h1>{obra.nombre}</h1>
@@ -104,21 +108,21 @@ function ObraDetalle() {
                 </svg>
                 {obra.ubicacion}
               </div>
-              {obra.año && (
+              {obra.anno && (
                 <div className="meta-item">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <rect x="3" y="4" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5"/>
                     <path d="M3 8h14M7 2v4M13 2v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
-                  {obra.año}
+                  {obra.anno}
                 </div>
               )}
-              {obra.metrosCuadrados && (
+              {obra.metros_cuadrados && (
                 <div className="meta-item">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <path d="M3 17V7l7-4 7 4v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  {obra.metrosCuadrados} m²
+                  {obra.metros_cuadrados} m²
                 </div>
               )}
             </div>
@@ -139,8 +143,8 @@ function ObraDetalle() {
             />
             {imagenes.length > 1 && (
               <>
-                <button 
-                  className="galeria-nav prev" 
+                <button
+                  className="galeria-nav prev"
                   onClick={anterior}
                   aria-label="Imagen anterior"
                 >
@@ -148,8 +152,8 @@ function ObraDetalle() {
                     <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </button>
-                <button 
-                  className="galeria-nav next" 
+                <button
+                  className="galeria-nav next"
                   onClick={siguiente}
                   aria-label="Siguiente imagen"
                 >
@@ -187,7 +191,7 @@ function ObraDetalle() {
             <div className="info-principal">
               <h2>Sobre el proyecto</h2>
               <p className="obra-descripcion">{obra.descripcion}</p>
-              
+
               {obra.cliente && (
                 <div className="info-extra">
                   <h3>Cliente</h3>
@@ -207,16 +211,16 @@ function ObraDetalle() {
                   <span className="dato-label">Ubicación</span>
                   <span className="dato-value">{obra.ubicacion}</span>
                 </div>
-                {obra.año && (
+                {obra.anno && (
                   <div className="dato-item">
                     <span className="dato-label">Año</span>
-                    <span className="dato-value">{obra.año}</span>
+                    <span className="dato-value">{obra.anno}</span>
                   </div>
                 )}
-                {obra.metrosCuadrados && (
+                {obra.metros_cuadrados && (
                   <div className="dato-item">
                     <span className="dato-label">Superficie</span>
-                    <span className="dato-value">{obra.metrosCuadrados} m²</span>
+                    <span className="dato-value">{obra.metros_cuadrados} m²</span>
                   </div>
                 )}
                 {obra.destacada && (

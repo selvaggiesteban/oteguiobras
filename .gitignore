@@ -14,6 +14,16 @@ dist-ssr
 
 # Env
 .env
+.env.local
+api/.env
+
+# Deploy artifacts
+deploy-oteguiobras*.zip
+*.zip
+
+# Generated images
+home_full.png
+home_hero.png
 
 # Scripts - archivos sensibles y generados
 scripts/serviceAccountKey.json
