@@ -7,11 +7,9 @@
 RewriteEngine On
 
 # Security headers
-<IfModule mod_headers.c>
-  Header set X-Content-Type-Options "nosniff"
-  Header set X-Frame-Options "SAMEORIGIN"
-  Header set X-XSS-Protection "1; mode=block"
-</IfModule>
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "SAMEORIGIN"
+Header set X-XSS-Protection "1; mode=block"
 
 # Force UTF-8 for all text-based resources
 AddDefaultCharset UTF-8
