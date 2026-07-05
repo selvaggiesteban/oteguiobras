@@ -19,7 +19,7 @@ $CONFIG = [
   // → Fine-grained tokens → Generate new token
   // → Repository access: Only select repositories → selvaggiesteban/oteguiobras
   // → Permissions: Contents (Read-only)
-  'github_token'  => '',                    // ← PEGAR tu GitHub PAT aquí
+  'github_token'  => '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',
   'github_repo'   => 'selvaggiesteban/oteguiobras',
   'github_branch' => 'main',
 
@@ -330,11 +330,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $schemaFile = __DIR__ . '/migration/schema-and-seed.sql';
   if (file_exists($schemaFile)) {
     $sql = file_get_contents($schemaFile);
+    // Strip comment lines BEFORE splitting (prevents first CREATE TABLE being skipped)
+    $sql = preg_replace('/^\s*--.*$/m', '', $sql);
     // Dividir por punto y coma y ejecutar cada statement
     $statements = array_filter(array_map('trim', explode(';', $sql)));
     $executed = 0;
     foreach ($statements as $stmt) {
-      if (empty($stmt) || str_starts_with($stmt, '--')) continue;
+      if (empty($stmt)) continue;
       try {
         $pdo->exec($stmt);
         $executed++;
@@ -353,10 +355,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $obrasFile = __DIR__ . '/migration/obras-seed.sql';
   if (file_exists($obrasFile)) {
     $sql = file_get_contents($obrasFile);
+    $sql = preg_replace('/^\s*--.*$/m', '', $sql);
     $statements = array_filter(array_map('trim', explode(';', $sql)));
     $executed = 0;
     foreach ($statements as $stmt) {
-      if (empty($stmt) || str_starts_with($stmt, '--')) continue;
+      if (empty($stmt)) continue;
       try {
         $pdo->exec($stmt);
         $executed++;
