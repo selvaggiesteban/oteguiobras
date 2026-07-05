@@ -1,0 +1,42 @@
+RewriteEngine On
+DirectorySlash Off
+
+# CORS headers — dynamic origin for credentials support
+SetEnvIf Origin "^https?://(.*\.)?oteguiobras\.com$" CORS_ORIGIN=$0
+Header set Access-Control-Allow-Origin "%{CORS_ORIGIN}e" env=CORS_ORIGIN
+Header set Access-Control-Allow-Credentials "true"
+Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+Header set Access-Control-Allow-Headers "Content-Type"
+
+# Handle preflight
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^ - [R=204,L]
+
+# Auth routes
+RewriteRule ^auth/login$ /api/auth/login.php [L]
+RewriteRule ^auth/logout$ /api/auth/logout.php [L]
+RewriteRule ^auth/check$ /api/auth/check.php [L]
+
+# Obras routes
+RewriteRule ^obras/upload$ /api/obras/upload.php [L]
+RewriteRule ^obras/(\d+)$ /api/obras/show.php?id=$1 [L]
+RewriteRule ^obras$ /api/obras/index.php [L]
+
+# Equipo routes
+RewriteRule ^equipo/upload$ /api/equipo/upload.php [L]
+RewriteRule ^equipo/(\d+)$ /api/equipo/show.php?id=$1 [L]
+RewriteRule ^equipo$ /api/equipo/index.php [L]
+
+# Contacto routes
+RewriteRule ^contacto/(\d+)$ /api/contacto/show.php?id=$1 [L]
+RewriteRule ^contacto$ /api/contacto/index.php [L]
+
+# Postulaciones routes
+RewriteRule ^postulaciones/(\d+)$ /api/postulaciones/show.php?id=$1 [L]
+RewriteRule ^postulaciones$ /api/postulaciones/index.php [L]
+
+# Config routes
+RewriteRule ^config/(home|clientes|faq|destacadas)$ /api/config/$1.php [L]
+
+# PHP type
+AddType application/json .php
