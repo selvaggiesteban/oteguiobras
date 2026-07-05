@@ -3,28 +3,20 @@
 # SPA (React HashRouter) + PHP API
 # ============================================================
 
-# Enable rewrite engine
 RewriteEngine On
 
 # Security headers
-Header set X-Content-Type-Options "nosniff"
-Header set X-Frame-Options "SAMEORIGIN"
-Header set X-XSS-Protection "1; mode=block"
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-XSS-Protection "1; mode=block"
+</IfModule>
 
-# Force UTF-8 for all text-based resources
 AddDefaultCharset UTF-8
 AddCharset UTF-8 .js .mjs .css .html .json .svg
 
-# Force HTTPS (uncomment when SSL is active)
-# RewriteCond %{HTTPS} off
-# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
-
-# API routes — pass through to /api/.htaccess
+# API routes
 RewriteRule ^api/(.*)$ api/$1 [L,QSA]
-
-# Proxy /oteguiobras2/api requests to the correct path
-RewriteCond %{REQUEST_URI} ^/oteguiobras2/api/
-RewriteRule ^oteguiobras2/api/(.*)$ /oteguiobras2/api/$1 [L,QSA]
 
 # Static files — serve directly
 RewriteCond %{REQUEST_FILENAME} -f
