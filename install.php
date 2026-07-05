@@ -38,7 +38,6 @@ session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
-ini_set('memory_limit', '256M');
 
 $log = [];
 $logFile = sys_get_temp_dir() . '/oteGUI_OBRAS_install.log';
@@ -89,8 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $pdoOk = extension_loaded('pdo_mysql');
   addLog('ext-pdo_mysql', $pdoOk);
 
-  $zipOk = class_exists('ZipArchive');
-  addLog('ext-zip', $zipOk);
+  $zipOk = class_exists('ZipArchive') || function_exists('exec');
+  addLog('unzip/ZipArchive: ' . ($zipOk ? 'disponible' : 'faltan ambos'), $zipOk);
 
   $curlOk = function_exists('curl_init');
   addLog('ext-curl', $curlOk);
@@ -162,20 +161,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $zipSize = filesize($tmpZip);
   addLog("Descargado: " . number_format($zipSize / 1024 / 1024, 1) . " MB");
 
-  // 4. Extraer archivos
+  // 4. Extraer archivos (usar unzip command — mínimo uso de memoria)
   addLog('Extrayendo archivos...');
 
-  $zip = new ZipArchive();
-  if ($zip->open($tmpZip) !== true) {
-    addLog('Error abriendo zip', false);
-    jsonResponse(['error' => 'Error abriendo archivo zip', 'step' => 4, 'log' => $log], 500);
-  }
-
-  // Directorio temporal de extracción
   $extractDir = sys_get_temp_dir() . '/oteGUI_extract_' . uniqid();
   mkdir($extractDir, 0755, true);
-  $zip->extractTo($extractDir);
-  $zip->close();
+
+  // Intentar con exec('unzip') primero (mínima memoria)
+  $unzipOk = false;
+  if (function_exists('exec')) {
+    $cmd = sprintf('unzip -o %s -d %s 2>&1', escapeshellarg($tmpZip), escapeshellarg($extractDir));
+    exec($cmd, $unzipOutput, $unzipReturn);
+    $unzipOk = ($unzipReturn === 0);
+    if (!$unzipOk) {
+      addLog("unzip falló (código $unzipReturn), intentando ZipArchive...", false);
+    }
+  }
+
+  // Fallback: ZipArchive (más memoria pero funcional)
+  if (!$unzipOk) {
+    if (!class_exists('ZipArchive')) {
+      jsonResponse(['error' => 'No hay unzip ni ZipArchive disponible', 'step' => 4, 'log' => $log], 500);
+    }
+    $zip = new ZipArchive();
+    if ($zip->open($tmpZip) !== true) {
+      jsonResponse(['error' => 'Error abriendo archivo zip', 'step' => 4, 'log' => $log], 500);
+    }
+    $zip->extractTo($extractDir);
+    $zip->close();
+  }
+  addLog('Archivos extraídos');
 
   // Encontrar el directorio raíz del zip (GitHub agrega un prefijo)
   $subdirs = glob("$extractDir/*", GLOB_ONLYDIR);
@@ -198,6 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // Archivos individuales a copiar al root
   $includeFiles = [
     '.htaccess',
+    '.user.ini',
     'hero-video.mp4',
   ];
 
