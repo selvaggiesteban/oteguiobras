@@ -38,6 +38,7 @@ session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
+ini_set('memory_limit', '256M');
 
 $log = [];
 $logFile = sys_get_temp_dir() . '/oteGUI_OBRAS_install.log';
@@ -117,26 +118,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
   addLog('No hay instalación previa');
 
-  // 3. Descargar desde GitHub
+  // 3. Descargar desde GitHub (stream directo a disco — sin cargar en memoria)
   addLog('Descargando desde GitHub...');
   $zipUrl = "https://api.github.com/repos/{$CONFIG['github_repo']}/zipball/{$CONFIG['github_branch']}";
   $tmpZip = tempnam(sys_get_temp_dir(), 'oteGUI_') . '.zip';
 
+  $fp = fopen($tmpZip, 'wb');
+  if (!$fp) {
+    jsonResponse(['error' => 'No se pudo crear archivo temporal', 'step' => 3], 500);
+  }
+
   $ch = curl_init($zipUrl);
   curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FILE => $fp,
     CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_TIMEOUT => 300,
+    CURLOPT_TIMEOUT => 600,
     CURLOPT_HTTPHEADER => [
       'Authorization: Bearer ' . $CONFIG['github_token'],
       'Accept: application/vnd.github+json',
       'User-Agent: OteguiObras-Installer/1.0',
     ],
   ]);
-  $zipData = curl_exec($ch);
+  curl_exec($ch);
   $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
   $curlError = curl_error($ch);
+  $bytesDownloaded = curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD);
   curl_close($ch);
+  fclose($fp);
 
   if ($curlError) {
     addLog("Error de conexión: $curlError", false);
@@ -151,7 +159,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     jsonResponse(['error' => "Error de GitHub: $msg", 'step' => 3, 'log' => $log], 500);
   }
 
-  file_put_contents($tmpZip, $zipData);
   $zipSize = filesize($tmpZip);
   addLog("Descargado: " . number_format($zipSize / 1024 / 1024, 1) . " MB");
 
