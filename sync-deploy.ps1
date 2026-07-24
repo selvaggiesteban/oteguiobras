@@ -40,19 +40,11 @@ foreach ($item in $copyItems) {
     }
 }
 
-# Also copy static assets from public_html (images, logos, assets)
-$publicHtml = Join-Path (Split-Path $PSScriptRoot) "public_html"
-if (Test-Path $publicHtml) {
-    foreach ($dir in @("images", "logos", "assets")) {
-        $srcDir = Join-Path $publicHtml $dir
-        if (Test-Path $srcDir) {
-            Copy-Item -Recurse $srcDir (Join-Path $tempDir $dir)
-        }
-    }
-    # Copy root files from public_html
-    Get-ChildItem $publicHtml -File | ForEach-Object {
-        Copy-Item $_.FullName (Join-Path $tempDir $_.Name)
-    }
+# Remove dist/images/ (images already exist on hosting — no need to deploy)
+$distImages = Join-Path $tempDir "dist\images"
+if (Test-Path $distImages) {
+    Remove-Item -Recurse -Force $distImages
+    Write-Host "  Removed dist/images/ (already on hosting)" -ForegroundColor DarkGray
 }
 
 # 3. Create/update orphan deploy branch
