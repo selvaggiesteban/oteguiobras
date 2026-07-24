@@ -67,13 +67,6 @@ function Header() {
           >
             Equipo
           </Link>
-          <Link 
-            to="/trabaja-con-nosotros" 
-            className={`nav-link ${location.pathname === '/trabaja-con-nosotros' ? 'active' : ''}`}
-            onClick={closeMenu}
-          >
-            Unite!
-          </Link>
           <Link to="/contacto" className="btn-header" onClick={closeMenu}>
             Contacto
           </Link>

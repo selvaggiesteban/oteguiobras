@@ -8,7 +8,7 @@ import Obras from './components/Obras/Obras';
 import ObraDetalle from './components/ObraDetalle/ObraDetalle';
 import Equipo from './components/Equipo/Equipo';
 import Contacto from './components/Contacto/Contacto';
-import TrabajaConNosotros from './components/TrabajaConNosotros/TrabajaConNosotros';
+// import TrabajaConNosotros from './components/TrabajaConNosotros/TrabajaConNosotros';
 import Admin from './components/Admin/Admin';
 import ProtectedRoute from './components/Admin/ProtectedRoute';
 import { AuthProvider } from './hooks/useAuth';
@@ -53,7 +53,7 @@ function AppLayout() {
           <Route path="/obras/:id" element={<ObraDetalle />} />
           <Route path="/equipo" element={<Equipo />} />
           <Route path="/contacto" element={<Contacto />} />
-          <Route path="/trabaja-con-nosotros" element={<TrabajaConNosotros />} />
+          {/* <Route path="/trabaja-con-nosotros" element={<TrabajaConNosotros />} /> */}
           <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>

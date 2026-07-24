@@ -153,48 +153,6 @@ function Home() {
         </div>
       </section>
 
-      {/* Clientes destacados */}
-      {clientes.length > 0 && (
-      <section className="clientes-destacados" ref={clientesRef}>
-        <div className="container">
-          <div className={`clientes-destacados-header ${clientesInView ? 'animate-in' : ''}`}>
-            <p className="clientes-eyebrow">Quienes confían en nosotros</p>
-            <h2>Trabajamos con las principales<br />empresas e instituciones del país</h2>
-          </div>
-
-          <div className={`clientes-logos-grid ${clientesInView ? 'animate-in' : ''}`}>
-            {clientes.map((cliente, index) => (
-              <div
-                key={cliente.id}
-                className="cliente-logo-card"
-                style={{ animationDelay: `${index * 0.08}s` }}
-              >
-                <img src={cliente.logoUrl} alt={cliente.nombre} />
-              </div>
-            ))}
-          </div>
-
-          {/* Carrusel infinito para mobile */}
-          <div className="clientes-carrusel-mobile">
-            <div className="carrusel-track">
-              {[...clientes, ...clientes, ...clientes].map((cliente, index) => (
-                <div key={`${cliente.id}-${index}`} className="carrusel-item">
-                  <img src={cliente.logoUrl} alt={cliente.nombre} />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-      )}
-
-      {/* Frase corporativa */}
-      <section className="frase-corporativa">
-        <div className="container">
-          <p className="frase-corporativa-texto">Excelencia en obras corporativas e industriales</p>
-        </div>
-      </section>
-
       {/* Obras Destacadas */}
       {obrasDestacadas.length > 0 && (
       <section className="featured-works-section" ref={obrasRef}>
@@ -248,6 +206,48 @@ function Home() {
               Ver todas las obras
               <FaArrowRight className="btn-icon" />
             </Link>
+          </div>
+        </div>
+      </section>
+      )}
+
+      {/* Frase corporativa */}
+      <section className="frase-corporativa">
+        <div className="container">
+          <p className="frase-corporativa-texto">Excelencia en obras corporativas e industriales</p>
+        </div>
+      </section>
+
+      {/* Clientes destacados */}
+      {clientes.length > 0 && (
+      <section className="clientes-destacados" ref={clientesRef}>
+        <div className="container">
+          <div className={`clientes-destacados-header ${clientesInView ? 'animate-in' : ''}`}>
+            <p className="clientes-eyebrow">Quienes confían en nosotros</p>
+            <h2>Trabajamos con las principales<br />empresas e instituciones del país</h2>
+          </div>
+
+          <div className={`clientes-logos-grid ${clientesInView ? 'animate-in' : ''}`}>
+            {clientes.map((cliente, index) => (
+              <div
+                key={cliente.id}
+                className="cliente-logo-card"
+                style={{ animationDelay: `${index * 0.08}s` }}
+              >
+                <img src={cliente.logoUrl} alt={cliente.nombre} />
+              </div>
+            ))}
+          </div>
+
+          {/* Carrusel infinito para mobile */}
+          <div className="clientes-carrusel-mobile">
+            <div className="carrusel-track">
+              {[...clientes, ...clientes, ...clientes].map((cliente, index) => (
+                <div key={`${cliente.id}-${index}`} className="carrusel-item">
+                  <img src={cliente.logoUrl} alt={cliente.nombre} />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

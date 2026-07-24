@@ -39,7 +39,6 @@ function Footer() {
                 <Link to="/obras">Obras</Link>
                 <Link to="/equipo">Equipo</Link>
                 <Link to="/contacto">Contacto</Link>
-                <Link to="/trabaja-con-nosotros">Unite!</Link>
               </nav>
             </div>
 
