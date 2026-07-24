@@ -21,6 +21,9 @@ dist/api/.env
 deploy-oteguiobras*.zip
 *.zip
 
+# Videos (subir manualmente al hosting)
+*.mp4
+
 # Generated images
 home_full.png
 home_hero.png

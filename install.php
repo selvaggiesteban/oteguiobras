@@ -214,7 +214,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $includeFiles = [
     '.htaccess',
     '.user.ini',
-    'hero-video.mp4',
   ];
 
   // Directorios a excluir de dist/ (redundantes o sensibles)
@@ -752,9 +751,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p><span class="cred">${data.admin_email}</span></p>
             <p><span class="cred">${data.admin_pass}</span></p>
             <div class="warning-box">
-              ⚠ No olvides subir el video hero vía FTP a:<br>
-              <code>/public_html/images/hero/hero-video.mp4</code><br>
-              Luego configurarlo en Admin → Home → Hero Video URL
+              ⚠ Subí los videos por File Manager a:<br>
+              <code>/public_html/hero-video.mp4</code> (hero principal)<br>
+              <code>/public_html/WhatsApp Video 2026-03-20 at 14.45.05.mp4</code> (video secundario)<br>
+              Los videos no se descargan del repo para mantener el deploy liviano.
             </div>
             <div class="warning-box" style="margin-top:8px;">
               ⚠ Por seguridad, podés eliminar install.php después de verificar que todo funciona.
