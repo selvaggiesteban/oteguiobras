@@ -21,7 +21,7 @@ $CONFIG = [
   // → Permissions: Contents (Read-only)
   'github_token'  => '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',
   'github_repo'   => 'selvaggiesteban/oteguiobras',
-  'github_branch' => 'main',
+  'github_branch' => 'deploy',
 
   // Base de datos (DirectAdmin → MySQL Databases)
   'db_host' => 'localhost',
