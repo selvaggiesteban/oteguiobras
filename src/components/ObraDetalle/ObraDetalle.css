@@ -339,35 +339,63 @@
   box-shadow: 0 6px 20px rgba(212, 165, 116, 0.25);
 }
 
-.obra-cta {
-  padding: 5rem 0;
+.cta-intermedio {
+  padding: 6rem 0;
   background: #1a1a1a;
+  position: relative;
+  overflow: hidden;
 }
 
-.cta-box {
+.cta-intermedio::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(212, 165, 116, 0.1) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.cta-intermedio-content {
+  position: relative;
+  z-index: 1;
   text-align: center;
-  max-width: 600px;
+  max-width: 700px;
   margin: 0 auto;
 }
 
-.cta-box h3 {
-  font-size: clamp(1.5rem, 2.5vw, 2rem);
+.cta-eyebrow {
+  color: #d4a574;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 1rem;
+}
+
+.cta-intermedio-content h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 600;
   color: white;
-  margin-bottom: 1rem;
-  letter-spacing: -0.01em;
+  margin-bottom: 1.5rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
-.cta-box p {
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.55);
-  margin-bottom: 2rem;
-  line-height: 1.7;
+.cta-intermedio-content p {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 3rem;
+  line-height: 1.6;
 }
 
-.btn-cta-obra {
-  display: inline-block;
-  padding: 1rem 2.5rem;
+.btn-cta-gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 2.5rem;
   background: #d4a574;
   color: white;
   text-decoration: none;
@@ -379,10 +407,18 @@
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.btn-cta-obra:hover {
+.btn-cta-gold:hover {
   background: #c4956a;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(212, 165, 116, 0.3);
+  box-shadow: 0 10px 25px rgba(212, 165, 116, 0.3);
+}
+
+.btn-cta-gold svg {
+  transition: transform 0.3s ease;
+}
+
+.btn-cta-gold:hover svg {
+  transform: translateX(3px);
 }
 
 .obra-detalle-error {
@@ -435,11 +471,11 @@
     font-size: 0.9375rem;
   }
 
-  .obra-cta {
+  .cta-intermedio {
     padding: 4rem 0;
   }
 
-  .cta-box h3 {
+  .cta-intermedio-content h2 {
     font-size: clamp(1.25rem, 2vw, 1.75rem);
   }
 
@@ -514,11 +550,11 @@
     padding: 2rem;
   }
 
-  .cta-box h3 {
+  .cta-intermedio-content h2 {
     font-size: 1.5rem;
   }
 
-  .cta-box p {
+  .cta-intermedio-content p {
     font-size: 0.9375rem;
   }
 }
