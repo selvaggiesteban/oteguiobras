@@ -1,4 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { FaArrowRight } from 'react-icons/fa';
 import { useState, useEffect } from 'react';
 import { getObra } from '../../api/obras';
 import { useScrollReveal } from '../../hooks/useAnimations';
@@ -243,12 +244,16 @@ function ObraDetalle() {
       </section>
 
       {/* CTA */}
-      <section className="obra-cta">
-        <div className="container">
-          <div className={`cta-box ${ctaClass}`} ref={ctaRef}>
-            <h3>¿Tenés un proyecto en mente?</h3>
+      <section className=\"cta-intermedio\">
+        <div className=\"container\">
+          <div className={`cta-intermedio-content ${ctaClass}`} ref={ctaRef}>
+            <p className=\"cta-eyebrow\">Sugerencia de presupuesto</p>
+            <h2>¿Tenés un proyecto en mente?</h2>
             <p>Hablemos de cómo podemos hacerlo realidad</p>
-            <Link to="/contacto" className="btn-cta-obra">Solicitar Presupuesto</Link>
+            <Link to=\"/contacto\" className=\"btn-cta-gold\">
+              Solicitar Presupuesto
+              <FaArrowRight />
+            </Link>
           </div>
         </div>
       </section>
