@@ -210,14 +210,12 @@ function Home() {
         </div>
       </section>
       )}
-
       {/* Frase corporativa */}
       <section className="frase-corporativa">
         <div className="container">
           <p className="frase-corporativa-texto">Excelencia en obras corporativas e industriales</p>
         </div>
       </section>
-
       {/* Clientes destacados */}
       {clientes.length > 0 && (
       <section className="clientes-destacados" ref={clientesRef}>
