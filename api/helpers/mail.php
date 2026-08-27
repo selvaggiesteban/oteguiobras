@@ -1,27 +1,54 @@
 <?php
-// ─── Email helper for LatinCloud (DirectAdmin + Exim) ──────────
-// Uses PHP native mail() — works out of the box on DirectAdmin hosting.
+// ─── Email helper using PHPMailer + SMTP ──────────────────────
+// Uses authenticated SMTP via DirectAdmin mail account.
 
-define('SMTP_FROM', 'Otegui Obras <no-reply@oteguiobras.com>');
+require_once __DIR__ . '/phpmailer/PHPMailer.php';
+require_once __DIR__ . '/phpmailer/SMTP.php';
+require_once __DIR__ . '/phpmailer/Exception.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
+define('SMTP_FROM', 'Otegui Obras <admin@oteguiobras.com>');
 define('SMTP_NOTIFY', 'admin@oteguiobras.com');
 
 /**
- * Send an admin notification email.
+ * Send an admin notification email via SMTP.
  * @param string $subject  Email subject (UTF-8)
  * @param string $body     HTML body
  * @return bool
  */
 function sendAdminNotification($subject, $body) {
-  $to = SMTP_NOTIFY;
-  $headers = [
-    'From: ' . SMTP_FROM,
-    'Reply-To: ' . SMTP_FROM,
-    'MIME-Version: 1.0',
-    'Content-Type: text/html; charset=UTF-8',
-    'X-Mailer: OteguiObras/1.0',
-  ];
+  $mail = new PHPMailer(true);
 
-  return mail($to, $subject, $body, implode("\r\n", $headers));
+  try {
+    // SMTP config from environment
+    $mail->isSMTP();
+    $mail->Host       = getenv('SMTP_HOST') ?: 'mail.oteguiobras.com';
+    $mail->Port       = getenv('SMTP_PORT') ?: 465;
+    $mail->SMTPAuth   = true;
+    $mail->Username   = getenv('SMTP_USER') ?: SMTP_NOTIFY;
+    $mail->Password   = getenv('SMTP_PASS') ?: '';
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // SSL on 465
+    $mail->CharSet    = 'UTF-8';
+
+    // From / To
+    $mail->setFrom('admin@oteguiobras.com', 'Otegui Obras');
+    $mail->addAddress(SMTP_NOTIFY);
+
+    // Content
+    $mail->isHTML(true);
+    $mail->Subject = $subject;
+    $mail->Body    = $body;
+    $mail->AltBody = strip_tags($body);
+
+    $mail->send();
+    return true;
+  } catch (Exception $e) {
+    error_log('[mail.php] SMTP error: ' . $mail->ErrorInfo);
+    return false;
+  }
 }
 
 /**
