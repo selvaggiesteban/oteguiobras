@@ -10,8 +10,8 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-define('SMTP_FROM', 'Otegui Obras <admin@oteguiobras.com>');
-define('SMTP_NOTIFY', 'admin@oteguiobras.com');
+define('SMTP_FROM', 'Otegui Obras <oteguiobra@gmail.com>');
+define('SMTP_NOTIFY', 'oficina@oteguiobras.com');
 
 /**
  * Send an admin notification email via SMTP.
@@ -23,18 +23,18 @@ function sendAdminNotification($subject, $body) {
   $mail = new PHPMailer(true);
 
   try {
-    // SMTP config from environment
+    // SMTP config from environment (Gmail)
     $mail->isSMTP();
-    $mail->Host       = getenv('SMTP_HOST') ?: 'mail.oteguiobras.com';
-    $mail->Port       = getenv('SMTP_PORT') ?: 465;
+    $mail->Host       = getenv('SMTP_HOST') ?: 'smtp.gmail.com';
+    $mail->Port       = getenv('SMTP_PORT') ?: 587;
     $mail->SMTPAuth   = true;
-    $mail->Username   = getenv('SMTP_USER') ?: SMTP_NOTIFY;
+    $mail->Username   = getenv('SMTP_USER') ?: 'oteguiobra@gmail.com';
     $mail->Password   = getenv('SMTP_PASS') ?: '';
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // SSL on 465
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->CharSet    = 'UTF-8';
 
     // From / To
-    $mail->setFrom('admin@oteguiobras.com', 'Otegui Obras');
+    $mail->setFrom('oteguiobra@gmail.com', 'Otegui Obras');
     $mail->addAddress(SMTP_NOTIFY);
 
     // Content
