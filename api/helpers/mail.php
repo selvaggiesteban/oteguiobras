@@ -33,9 +33,10 @@ function sendAdminNotification($subject, $body) {
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->CharSet    = 'UTF-8';
 
-    // From / To
+    // From / To / CC
     $mail->setFrom('oteguiobra@gmail.com', 'Otegui Obras');
     $mail->addAddress(SMTP_NOTIFY);
+    $mail->addCC('oteguiobra@gmail.com');
 
     // Content
     $mail->isHTML(true);
